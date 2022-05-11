@@ -27,14 +27,14 @@ func NewEvent(topic string, data []byte) *Event {
 
 func (receiver *EventSource) transferEvents() {
 	for event := range receiver.DataChannel {
-		log.Println("Receiver Topology:", receiver.Topic)
 		log.Println("Number of Subscribers:", len(receiver.Subscribers))
-		for _, subscriber := range receiver.Subscribers {
+		for i, subscriber := range receiver.Subscribers {
 			log.Println("Sending event to subscriber for topic:", receiver.Topic)
 			event := NewEvent(receiver.Topic, event)
 			err := writeData(event, subscriber)
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
+				receiver.Subscribers = append(receiver.Subscribers[:i], receiver.Subscribers[i+1:]...)
 			}
 		}
 	}
