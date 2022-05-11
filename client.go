@@ -74,7 +74,7 @@ func (c *Client) acceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, err := reader.ReadBytes(DELIMITER)
 		if err != nil {
-			log.Fatal("failed to read event: %+v", err)
+			log.Fatalf("failed to read event: %+v", err)
 		}
 
 		var event Event
