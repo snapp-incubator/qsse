@@ -8,7 +8,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
 	"log"
-	"sync"
 )
 
 const DELIMITER = '\n'
@@ -16,7 +15,6 @@ const DELIMITER = '\n'
 type Server struct {
 	listener     quic.Listener
 	EventSources map[string]*EventSource
-	lock         *sync.Mutex
 
 	Authenticate func(token string) bool
 }
@@ -25,7 +23,7 @@ var DefaultAuthenticationFunc = func(token string) bool {
 	return true
 }
 
-func NewServer(address string, tlsConfig *tls.Config) (*Server, error) {
+func NewServer(address string, tlsConfig *tls.Config, topics []string) (*Server, error) {
 
 	listener, err := quic.ListenAddr(address, tlsConfig, nil)
 	if err != nil {
@@ -36,8 +34,9 @@ func NewServer(address string, tlsConfig *tls.Config) (*Server, error) {
 		listener:     listener,
 		Authenticate: DefaultAuthenticationFunc,
 		EventSources: make(map[string]*EventSource),
-		lock:         &sync.Mutex{},
 	}
+
+	server.generateEventSources(topics)
 
 	go server.acceptClients()
 
@@ -45,8 +44,9 @@ func NewServer(address string, tlsConfig *tls.Config) (*Server, error) {
 }
 
 func (s *Server) PublishEvent(topic string, event []byte) {
-	s.verifyTopic(topic)
-	s.EventSources[topic].DataChannel <- event
+	if source, ok := s.EventSources[topic]; ok {
+		source.DataChannel <- event
+	}
 }
 
 func (s *Server) SetAuthenticationFunc(authenticateFunc func(token string) bool) {
@@ -89,14 +89,14 @@ func (s *Server) handleClient(client *Subscriber) {
 
 }
 
-func (s *Server) verifyTopic(topic string) {
-	s.lock.Lock()
-	if _, ok := s.EventSources[topic]; !ok {
-		log.Printf("creating new event source for topic %s", topic)
-		s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
-		go s.EventSources[topic].transferEvents()
+func (s *Server) generateEventSources(topics []string) {
+	for _, topic := range topics {
+		if _, ok := s.EventSources[topic]; !ok {
+			log.Printf("creating new event source for topic %s", topic)
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
+			go s.EventSources[topic].transferEvents()
+		}
 	}
-	s.lock.Unlock()
 }
 
 func checkError(err error) {
