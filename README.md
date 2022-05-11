@@ -10,3 +10,69 @@
 </a>&nbsp;
 <img src="https://img.shields.io/badge/license-apache_2.0-red?style=for-the-badge&logo=none" alt="license" />
 </p>
+
+
+## Installation
+```bash
+go get github.com/mehditeymorian/qsse
+```
+
+## Basic Usage
+```Go
+// Client
+
+import "github.com/mehditeymorian/qsse"
+
+func main() {
+	_, err := qsse.NewClient("localhost:4242", "secret", []string{"firstnames", "lastnames"})
+	if err != nil {
+		panic(err)
+	}
+
+	select {}
+}
+
+```
+
+```Go
+// Server
+
+import (
+	"github.com/mehditeymorian/qsse"
+	"log"
+	"math/rand"
+	"time"
+)
+
+var firstNames = []string{...}
+
+var lastNames = []string{...}
+
+func main() {
+	authenticateFunc := func(token string) bool {
+		log.Printf("Authenticating token: %s", token)
+		return token == "secret"
+	}
+
+	topics := []string{"firstnames", "lastnames"}
+
+	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics)
+	if err != nil {
+		panic(err)
+	}
+	server.SetAuthenticationFunc(authenticateFunc)
+
+	go func() {
+		for {
+			if rand.NormFloat64() > 0.5 {
+				server.PublishEvent("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
+			} else {
+				server.PublishEvent("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
+			}
+			<-time.After(2 * time.Second)
+		}
+	}()
+
+	select {}
+}
+```
