@@ -18,10 +18,13 @@ type Client struct {
 	onError   func(code int, message error)
 }
 
+// DefaultOnMessage Default handler for processing incoming events without a handler.
 var DefaultOnMessage = func(topic string, message []byte) {
 	log.Printf("topic: %s\ndata: %s\n", topic, string(message))
 }
 
+// DefaultOnError Default handler for processing errors.
+// it listen to topic "error"
 var DefaultOnError = func(code int, message error) {
 	log.Printf("Error: %d - %+v\n", code, message)
 }
@@ -62,6 +65,11 @@ func NewClient(address string, token string, topics []string) (*Client, error) {
 	return &client, nil
 }
 
+// acceptEvents reads events from the stream and calls the proper handler.
+// order of calling handlers is as follows:
+// 1. onError if topic is "error"
+// 2. onEvent[topic]
+// 3. onMessage
 func (c *Client) acceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, _ := reader.ReadBytes(DELIMITER)
@@ -79,14 +87,17 @@ func (c *Client) acceptEvents(reader *bufio.Reader) {
 	}
 }
 
+// SetEventHandler sets the handler for the given topic.
 func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
 	c.onEvent[topic] = handler
 }
 
+// SetErrorHandler sets the handler for "error" topic.
 func (c *Client) SetErrorHandler(handler func(code int, err error)) {
 	c.onError = handler
 }
 
-func (c Client) SetOnMessageHandler(handler func(topic string, message []byte)) {
+// SetMessageHandler sets the handler for all topics without handler and "error" topic.
+func (c Client) SetMessageHandler(handler func(topic string, message []byte)) {
 	c.onMessage = handler
 }

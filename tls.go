@@ -11,6 +11,7 @@ import (
 
 const protocol = "PROTOCOL_QUIC"
 
+// GetDefaultTLSConfig returns a tls.Config with the default settings for server.
 func GetDefaultTLSConfig() *tls.Config {
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
@@ -34,6 +35,7 @@ func GetDefaultTLSConfig() *tls.Config {
 	}
 }
 
+// GetSimpleTLS returns a tls.Config with the default settings for client.
 func GetSimpleTLS() *tls.Config {
 	return &tls.Config{
 		InsecureSkipVerify: true,

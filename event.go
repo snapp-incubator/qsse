@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+// EventSource is a struct for topic channel and its subscribers.
 type EventSource struct {
 	Topic       string
 	DataChannel chan []byte
@@ -25,6 +26,7 @@ func NewEvent(topic string, data []byte) *Event {
 	return &Event{Topic: topic, Data: data}
 }
 
+// transferEvents distribute events from channel between subscribers.
 func (receiver *EventSource) transferEvents() {
 	for event := range receiver.DataChannel {
 		log.Println("Number of Subscribers:", len(receiver.Subscribers))
@@ -40,6 +42,7 @@ func (receiver *EventSource) transferEvents() {
 	}
 }
 
+// writeData writes data to stream.
 func writeData(data any, sendStream quic.SendStream) error {
 	var err error
 	switch data.(type) {
