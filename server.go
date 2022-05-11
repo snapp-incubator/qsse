@@ -21,7 +21,11 @@ type Server struct {
 	Authenticate func(token string) bool
 }
 
-func NewServer(address string, tlsConfig *tls.Config, authenticateFunc func(token string) bool) (*Server, error) {
+var DefaultAuthenticationFunc = func(token string) bool {
+	return true
+}
+
+func NewServer(address string, tlsConfig *tls.Config) (*Server, error) {
 
 	listener, err := quic.ListenAddr(address, tlsConfig, nil)
 	if err != nil {
@@ -30,7 +34,7 @@ func NewServer(address string, tlsConfig *tls.Config, authenticateFunc func(toke
 
 	server := Server{
 		listener:     listener,
-		Authenticate: authenticateFunc,
+		Authenticate: DefaultAuthenticationFunc,
 		EventSources: make(map[string]*EventSource),
 		lock:         &sync.Mutex{},
 	}
@@ -43,6 +47,10 @@ func NewServer(address string, tlsConfig *tls.Config, authenticateFunc func(toke
 func (s *Server) PublishEvent(topic string, event []byte) {
 	s.verifyTopic(topic)
 	s.EventSources[topic].DataChannel <- event
+}
+
+func (s *Server) SetAuthenticationFunc(authenticateFunc func(token string) bool) {
+	s.Authenticate = authenticateFunc
 }
 
 func (s *Server) acceptClients() {

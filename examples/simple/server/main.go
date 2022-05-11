@@ -13,10 +13,11 @@ func main() {
 		return token == "secret"
 	}
 
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), authenticateFunc)
+	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig())
 	if err != nil {
 		panic(err)
 	}
+	server.SetAuthenticationFunc(authenticateFunc)
 
 	go func() {
 		for {
