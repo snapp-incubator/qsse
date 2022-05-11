@@ -31,18 +31,16 @@ func (receiver *EventSource) transferEvents() {
 		log.Println("Number of Subscribers:", len(receiver.Subscribers))
 		for _, subscriber := range receiver.Subscribers {
 			log.Println("Sending event to subscriber for topic:", receiver.Topic)
-			receiver.sendEvent(event, subscriber)
+			event := NewEvent(receiver.Topic, event)
+			err := writeData(event, subscriber)
+			if err != nil {
+				log.Printf("err while sending event to client: %s", err.Error())
+			}
 		}
 	}
 }
 
-func (receiver *EventSource) sendEvent(bytes []byte, sendStream quic.SendStream) {
-	event := NewEvent(receiver.Topic, bytes)
-
-	writeData(event, sendStream)
-}
-
-func writeData(data any, sendStream quic.SendStream) {
+func writeData(data any, sendStream quic.SendStream) error {
 	var err error
 	switch data.(type) {
 	case []byte:
