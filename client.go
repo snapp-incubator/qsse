@@ -72,7 +72,11 @@ func NewClient(address string, token string, topics []string) (*Client, error) {
 // 3. onMessage
 func (c *Client) acceptEvents(reader *bufio.Reader) {
 	for {
-		bytes, _ := reader.ReadBytes(DELIMITER)
+		bytes, err := reader.ReadBytes(DELIMITER)
+		if err != nil {
+			log.Fatal("failed to read event: %+v", err)
+		}
+
 		var event Event
 		json.Unmarshal(bytes, &event)
 
