@@ -51,6 +51,12 @@ func writeData(data any, sendStream quic.SendStream) {
 		bytes, _ := json.Marshal(data)
 		_, err = sendStream.Write(bytes)
 	}
-	log.Println(err)
-	sendStream.Write([]byte{DELIMITER})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = sendStream.Write([]byte{DELIMITER})
+
+	return err
 }
