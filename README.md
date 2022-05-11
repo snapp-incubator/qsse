@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img alt="QSSE logo" src="assets/icon.png" width="224px"/><br/>
+  <img alt="QSSE logo" src="assets/icon.png" width="500px"/><br/>
   SSE Over QUIC
 </h1>
 <p align="center">Implementation of Server Sent Events by QUIC. A faster replacement for traditional SSE over HTTP/2.</p>
