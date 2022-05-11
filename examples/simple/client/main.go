@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	_, err := qsse.NewClient("localhost:4242", "secret", []string{"test", "test2"})
+	_, err := qsse.NewClient("localhost:4242", "secret", []string{"firstnames", "lastnames"})
 	if err != nil {
 		panic(err)
 	}
