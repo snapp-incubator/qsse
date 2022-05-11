@@ -7,13 +7,25 @@ import (
 	"time"
 )
 
+var firstNames = []string{"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",
+	"Albert", "Walker", "Randy", "Reed", "Larry", "Barnes", "Lois", "Wilson",
+	"Jesse", "Campbell", "Ernest", "Rogers", "Theresa", "Patterson", "Henry",
+	"Simmons", "Michelle", "Perry", "Frank", "Butler", "Shirley"}
+
+var lastNames = []string{"Ruth", "Jackson", "Debra", "Allen", "Gerald", "Harris",
+	"Raymond", "Carter", "Jacqueline", "Torres", "Joseph", "Nelson", "Carlos",
+	"Sanchez", "Ralph", "Clark", "Jean", "Alexander", "Stephen", "Roberts",
+	"Eric", "Long", "Amanda", "Scott", "Teresa", "Diaz", "Wanda", "Thomas"}
+
 func main() {
 	authenticateFunc := func(token string) bool {
 		log.Printf("Authenticating token: %s", token)
 		return token == "secret"
 	}
 
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig())
+	topics := []string{"firstnames", "lastnames"}
+
+	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics)
 	if err != nil {
 		panic(err)
 	}
@@ -22,11 +34,11 @@ func main() {
 	go func() {
 		for {
 			if rand.NormFloat64() > 0.5 {
-				server.PublishEvent("test", []byte("higher chance to get a message"))
+				server.PublishEvent("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
 			} else {
-				server.PublishEvent("23434", []byte("test2"))
+				server.PublishEvent("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
 			}
-			<-time.After(5 * time.Second)
+			<-time.After(2 * time.Second)
 		}
 	}()
 
