@@ -5,9 +5,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"log"
+
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
-	"log"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -28,7 +29,6 @@ var DefaultAuthenticationFunc = func(token string) bool {
 
 // NewServer creates a new server and listen for connections on the given address.
 func NewServer(address string, tlsConfig *tls.Config, topics []string) (*Server, error) {
-
 	listener, err := quic.ListenAddr(address, tlsConfig, nil)
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
@@ -71,6 +71,7 @@ func (s *Server) acceptClients() {
 		connection, err := s.listener.Accept(background)
 		checkError(err)
 		log.Println("found a new client")
+
 		client := NewSubscriber(connection)
 		go s.handleClient(client)
 	}
@@ -83,6 +84,7 @@ func (s *Server) handleClient(client *Subscriber) {
 	if !isValid {
 		log.Println("client is not authenticated")
 		client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error())
+
 		return
 	}
 
@@ -114,6 +116,7 @@ func (s *Server) generateEventSources(topics []string) {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
+
 			go s.EventSources[topic].transferEvents()
 		}
 	}
