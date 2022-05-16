@@ -30,14 +30,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAuthenticationFunc(authenticateFunc)
+	server.SetAuthentication(authenticateFunc)
 
 	go func() {
 		for {
 			if rand.NormFloat64() > 0.5 {
-				server.PublishEvent("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
+				server.Publish("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
 			} else {
-				server.PublishEvent("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
+				server.Publish("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
 			}
 			<-time.After(2 * time.Second)
 		}
