@@ -2,13 +2,10 @@ package internal
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/lucas-clemente/quic-go"
 	"log"
-
-	"github.com/go-errors/errors"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -16,7 +13,7 @@ const DELIMITER = '\n'
 
 // Server is the main struct for the server.
 type Server struct {
-	listener     quic.Listener
+	Listener     quic.Listener
 	EventSources map[string]*EventSource
 
 	Authenticate func(token string) bool
@@ -25,26 +22,6 @@ type Server struct {
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
 var DefaultAuthenticationFunc = func(token string) bool {
 	return true
-}
-
-// NewServer creates a new server and listen for connections on the given address.
-func NewServer(address string, tlsConfig *tls.Config, topics []string) (*Server, error) {
-	listener, err := quic.ListenAddr(address, tlsConfig, nil)
-	if err != nil {
-		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
-	}
-
-	server := Server{
-		listener:     listener,
-		Authenticate: DefaultAuthenticationFunc,
-		EventSources: make(map[string]*EventSource),
-	}
-
-	server.generateEventSources(topics)
-
-	go server.acceptClients()
-
-	return &server, nil
 }
 
 // Publish publishes an event to all the subscribers of the given topic.
@@ -59,16 +36,16 @@ func (s *Server) SetAuthentication(authenticateFunc func(token string) bool) {
 	s.Authenticate = authenticateFunc
 }
 
-// acceptClients accepts clients and do the following steps.
+// AcceptClients accepts clients and do the following steps.
 // 1. Accept a receivedStream.
 // 2. Read client authentication token and topics.
 // 3. Authenticate the client.
 // 3.1 If the authentication is successful, opens sendStream for each topic and add them to eventSources.
 // 3.2 If the authentication is not successful, closes the connection.
-func (s *Server) acceptClients() {
+func (s *Server) AcceptClients() {
 	for {
 		background := context.Background()
-		connection, err := s.listener.Accept(background)
+		connection, err := s.Listener.Accept(background)
 		checkError(err)
 		log.Println("found a new client")
 
@@ -105,13 +82,13 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 		} else {
 			errBytes, _ := json.Marshal(ErrTopicNotAvailable(topic))
 			errEvent := NewEvent(ErrorTopic, errBytes)
-			writeData(errEvent, sendStream)
+			WriteData(errEvent, sendStream)
 		}
 	}
 }
 
-// generateEventSources generates eventSources for each topic.
-func (s *Server) generateEventSources(topics []string) {
+// GenerateEventSources generates eventSources for each topic.
+func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
