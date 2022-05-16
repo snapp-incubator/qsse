@@ -22,7 +22,7 @@ func main() {
 }
 
 func subscribe(clientID int, topics []string) {
-	client, err := qsse.NewClient("localhost:8080", "client", topics)
+	client, err := qsse.NewClient("localhost:8080", topics, nil)
 	if err != nil {
 		panic(err)
 	}
