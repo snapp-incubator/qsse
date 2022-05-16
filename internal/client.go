@@ -2,21 +2,19 @@ package internal
 
 import (
 	"bufio"
-	"context"
-	"crypto/tls"
 	"encoding/json"
 	"github.com/lucas-clemente/quic-go"
 	"log"
 )
 
 type Client struct {
-	connection quic.Connection
-	token      string
-	topics     []string
+	Connection quic.Connection
+	Token      string
+	Topics     []string
 
-	onEvent   map[string]func(event []byte)
-	onMessage func(topic string, message []byte)
-	onError   func(code int, message error)
+	OnEvent   map[string]func(event []byte)
+	OnMessage func(topic string, message []byte)
+	OnError   func(code int, message error)
 }
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
@@ -30,48 +28,12 @@ var DefaultOnError = func(code int, message error) {
 	log.Printf("Error: %d - %+v\n", code, message)
 }
 
-func NewClient(address string, token string, topics []string, tlsConfig *tls.Config) (*Client, error) {
-	connection, err := quic.DialAddr(address, tlsConfig, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := Client{
-		connection: connection,
-		token:      token,
-		topics:     topics,
-		onEvent:    make(map[string]func([]byte)),
-		onMessage:  DefaultOnMessage,
-		onError:    DefaultOnError,
-	}
-
-	offer := NewOffer(token, topics)
-	bytes, _ := json.Marshal(offer)
-
-	stream, _ := connection.OpenUniStream()
-
-	writeData(bytes, stream)
-	stream.Close()
-
-	connection.ConnectionState()
-
-	receiveStream, err := connection.AcceptUniStream(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	reader := bufio.NewReader(receiveStream)
-	go client.acceptEvents(reader)
-
-	return &client, nil
-}
-
-// acceptEvents reads events from the stream and calls the proper handler.
+// AcceptEvents reads events from the stream and calls the proper handler.
 // order of calling handlers is as follows:
-// 1. onError if topic is "error"
-// 2. onEvent[topic]
-// 3. onMessage
-func (c *Client) acceptEvents(reader *bufio.Reader) {
+// 1. OnError if topic is "error"
+// 2. OnEvent[topic]
+// 3. OnMessage
+func (c *Client) AcceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, err := reader.ReadBytes(DELIMITER)
 		if err != nil {
@@ -83,26 +45,26 @@ func (c *Client) acceptEvents(reader *bufio.Reader) {
 
 		if event.Topic == ErrorTopic {
 			err := UnmarshalError(event.Data)
-			c.onError(err.Code, err.Err)
-		} else if c.onEvent[event.Topic] != nil {
-			c.onEvent[event.Topic](event.Data)
+			c.OnError(err.Code, err.Err)
+		} else if c.OnEvent[event.Topic] != nil {
+			c.OnEvent[event.Topic](event.Data)
 		} else {
-			c.onMessage(event.Topic, event.Data)
+			c.OnMessage(event.Topic, event.Data)
 		}
 	}
 }
 
 // SetEventHandler sets the handler for the given topic.
 func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
-	c.onEvent[topic] = handler
+	c.OnEvent[topic] = handler
 }
 
 // SetErrorHandler sets the handler for "error" topic.
 func (c *Client) SetErrorHandler(handler func(code int, err error)) {
-	c.onError = handler
+	c.OnError = handler
 }
 
 // SetMessageHandler sets the handler for all topics without handler and "error" topic.
 func (c Client) SetMessageHandler(handler func(topic string, message []byte)) {
-	c.onMessage = handler
+	c.OnMessage = handler
 }
