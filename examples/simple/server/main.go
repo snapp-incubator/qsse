@@ -35,13 +35,17 @@ func main() {
 	go func() {
 		for {
 			if rand.NormFloat64() > 0.5 {
-				server.Publish("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
+				server.Publish("firstnames", RandomItem(firstNames))
 			} else {
-				server.Publish("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
+				server.Publish("lastnames", RandomItem(lastNames))
 			}
 			<-time.After(2 * time.Second)
 		}
 	}()
 
 	select {}
+}
+
+func RandomItem(items []string) []byte {
+	return []byte(items[rand.Intn(len(items))])
 }
