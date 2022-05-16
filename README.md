@@ -5,7 +5,7 @@
 <p align="center">Implementation of Server Sent Events by QUIC. A faster replacement for traditional SSE over HTTP/2.</p>
 
 <p align="center">
-<a href="https://pkg.go.dev/github.com/mehditeymorian/qsse/v3?tab=doc"target="_blank">
+<a href="https://pkg.go.dev/github.com/snapp-incubator/qsse/v3?tab=doc"target="_blank">
     <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?style=for-the-badge&logo=go" alt="go version" />
 </a>&nbsp;
 <img src="https://img.shields.io/badge/license-apache_2.0-red?style=for-the-badge&logo=none" alt="license" />
@@ -14,14 +14,14 @@
 
 ## Installation
 ```bash
-go get github.com/mehditeymorian/qsse
+go get github.com/snapp-incubator/qsse
 ```
 
 ## Basic Usage
 ```Go
 // Client
 
-import "github.com/mehditeymorian/qsse"
+import "github.com/snapp-incubator/qsse"
 
 func main() {
 	_, err := qsse.NewClient("localhost:4242", "secret", []string{"firstnames", "lastnames"})
@@ -38,7 +38,7 @@ func main() {
 // Server
 
 import (
-	"github.com/mehditeymorian/qsse"
+	"github.com/snapp-incubator/qsse"
 	"log"
 	"math/rand"
 	"time"

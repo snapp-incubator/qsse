@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mehditeymorian/qsse"
+	"github.com/snapp-incubator/qsse"
 )
 
 func RandomText(length int) []byte {

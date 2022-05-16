@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/mehditeymorian/qsse"
+	"github.com/snapp-incubator/qsse"
 )
 
 func main() {

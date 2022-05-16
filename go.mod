@@ -1,4 +1,4 @@
-module github.com/mehditeymorian/qsse
+module github.com/snapp-incubator/qsse
 
 go 1.18
 

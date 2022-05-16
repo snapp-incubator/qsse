@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/mehditeymorian/qsse"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/snapp-incubator/qsse"
 )
 
 var firstNames = []string{"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",

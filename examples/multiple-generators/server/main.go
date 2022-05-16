@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mehditeymorian/qsse"
+	"github.com/snapp-incubator/qsse"
 )
 
 func main() {
