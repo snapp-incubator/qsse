@@ -1,4 +1,4 @@
-package qsse
+package internal
 
 import (
 	"encoding/json"
@@ -33,7 +33,7 @@ func (receiver *EventSource) transferEvents() {
 		for i, subscriber := range receiver.Subscribers {
 			log.Println("Sending event to subscriber for topic:", receiver.Topic)
 			event := NewEvent(receiver.Topic, event)
-			err := writeData(event, subscriber)
+			err := WriteData(event, subscriber)
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
 				receiver.Subscribers = append(receiver.Subscribers[:i], receiver.Subscribers[i+1:]...)
@@ -42,8 +42,8 @@ func (receiver *EventSource) transferEvents() {
 	}
 }
 
-// writeData writes data to stream.
-func writeData(data any, sendStream quic.SendStream) error {
+// WriteData writes data to stream.
+func WriteData(data any, sendStream quic.SendStream) error {
 	var err error
 	switch data.(type) {
 	case []byte:

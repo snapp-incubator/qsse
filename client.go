@@ -3,56 +3,49 @@ package qsse
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"github.com/lucas-clemente/quic-go"
-	"log"
+	"github.com/snapp-incubator/qsse/internal"
 )
 
-type Client struct {
-	connection quic.Connection
-	token      string
-	topics     []string
+type Client interface {
+	SetEventHandler(topic string, handler func([]byte))
 
-	onEvent   map[string]func(event []byte)
-	onMessage func(topic string, message []byte)
-	onError   func(code int, message error)
+	SetErrorHandler(handler func(code int, err error))
+
+	SetMessageHandler(handler func(topic string, event []byte))
 }
 
-// DefaultOnMessage Default handler for processing incoming events without a handler.
-var DefaultOnMessage = func(topic string, message []byte) {
-	log.Printf("topic: %s\ndata: %s\n", topic, string(message))
+type ClientConfig struct {
+	Token     string
+	TLSConfig *tls.Config
 }
 
-// DefaultOnError Default handler for processing errors.
-// it listen to topic "error"
-var DefaultOnError = func(code int, message error) {
-	log.Printf("Error: %d - %+v\n", code, message)
-}
+func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
+	processedConfig := processConfig(config)
 
-func NewClient(address string, token string, topics []string) (*Client, error) {
-	connection, err := quic.DialAddr(address, GetSimpleTLS(), nil)
+	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	client := Client{
-		connection: connection,
-		token:      token,
-		topics:     topics,
-		onEvent:    make(map[string]func([]byte)),
-		onMessage:  DefaultOnMessage,
-		onError:    DefaultOnError,
+	client := internal.Client{
+		Connection: connection,
+		Token:      processedConfig.Token,
+		Topics:     topics,
+		OnEvent:    make(map[string]func([]byte)),
+		OnMessage:  internal.DefaultOnMessage,
+		OnError:    internal.DefaultOnError,
 	}
 
-	offer := NewOffer(token, topics)
+	offer := internal.NewOffer(processedConfig.Token, topics)
 	bytes, _ := json.Marshal(offer)
 
 	stream, _ := connection.OpenUniStream()
 
-	writeData(bytes, stream)
+	internal.WriteData(bytes, stream)
 	stream.Close()
-
-	connection.ConnectionState()
 
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
@@ -60,48 +53,22 @@ func NewClient(address string, token string, topics []string) (*Client, error) {
 	}
 
 	reader := bufio.NewReader(receiveStream)
-	go client.acceptEvents(reader)
+	go client.AcceptEvents(reader)
 
 	return &client, nil
 }
 
-// acceptEvents reads events from the stream and calls the proper handler.
-// order of calling handlers is as follows:
-// 1. onError if topic is "error"
-// 2. onEvent[topic]
-// 3. onMessage
-func (c *Client) acceptEvents(reader *bufio.Reader) {
-	for {
-		bytes, err := reader.ReadBytes(DELIMITER)
-		if err != nil {
-			log.Fatalf("failed to read event: %+v", err)
-		}
-
-		var event Event
-		json.Unmarshal(bytes, &event)
-
-		if event.Topic == ErrorTopic {
-			err := UnmarshalError(event.Data)
-			c.onError(err.Code, err.Err)
-		} else if c.onEvent[event.Topic] != nil {
-			c.onEvent[event.Topic](event.Data)
-		} else {
-			c.onMessage(event.Topic, event.Data)
+func processConfig(config *ClientConfig) ClientConfig {
+	if config == nil {
+		return ClientConfig{
+			Token:     "",
+			TLSConfig: GetSimpleTLS(),
 		}
 	}
-}
 
-// SetEventHandler sets the handler for the given topic.
-func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
-	c.onEvent[topic] = handler
-}
+	if config.TLSConfig == nil {
+		config.TLSConfig = GetSimpleTLS()
+	}
 
-// SetErrorHandler sets the handler for "error" topic.
-func (c *Client) SetErrorHandler(handler func(code int, err error)) {
-	c.onError = handler
-}
-
-// SetMessageHandler sets the handler for all topics without handler and "error" topic.
-func (c Client) SetMessageHandler(handler func(topic string, message []byte)) {
-	c.onMessage = handler
+	return *config
 }

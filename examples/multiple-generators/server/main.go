@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/snapp-incubator/qsse"
 	"math/rand"
 	"time"
-
-	"github.com/snapp-incubator/qsse"
 )
 
 func main() {

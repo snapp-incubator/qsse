@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/snapp-incubator/qsse"
 	"log"
 	"math/rand"
 	"time"
-
-	"github.com/snapp-incubator/qsse"
 )
 
 var firstNames = []string{"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",
@@ -30,18 +29,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAuthenticationFunc(authenticateFunc)
+	server.SetAuthentication(authenticateFunc)
 
 	go func() {
 		for {
 			if rand.NormFloat64() > 0.5 {
-				server.PublishEvent("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
+				server.Publish("firstnames", RandomItem(firstNames))
 			} else {
-				server.PublishEvent("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
+				server.Publish("lastnames", RandomItem(lastNames))
 			}
 			<-time.After(2 * time.Second)
 		}
 	}()
 
 	select {}
+}
+
+func RandomItem(items []string) []byte {
+	return []byte(items[rand.Intn(len(items))])
 }

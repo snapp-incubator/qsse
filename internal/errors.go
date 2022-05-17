@@ -1,4 +1,4 @@
-package qsse
+package internal
 
 import (
 	"encoding/json"

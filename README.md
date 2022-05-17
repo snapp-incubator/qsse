@@ -24,13 +24,20 @@ go get github.com/snapp-incubator/qsse
 import "github.com/snapp-incubator/qsse"
 
 func main() {
-	_, err := qsse.NewClient("localhost:4242", "secret", []string{"firstnames", "lastnames"})
-	if err != nil {
-		panic(err)
-	}
-
-	select {}
+    config := &qsse.ClientConfig{
+        Token:     "secret",
+        TLSConfig: nil,
+    }
+    topics := []string{"firstnames", "lastnames"}
+    
+    _, err := qsse.NewClient("localhost:4242", topics, config)
+    if err != nil {
+        panic(err)
+    }
+    
+    select {}
 }
+
 
 ```
 
@@ -60,19 +67,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAuthenticationFunc(authenticateFunc)
+	server.SetAuthentication(authenticateFunc)
 
 	go func() {
 		for {
-			if rand.NormFloat64() > 0.5 {
-				server.PublishEvent("firstnames", []byte(firstNames[rand.Intn(len(firstNames))]))
-			} else {
-				server.PublishEvent("lastnames", []byte(lastNames[rand.Intn(len(lastNames))]))
-			}
+            if rand.NormFloat64() > 0.5 {
+                server.Publish("firstnames", RandomItem(firstNames))
+            } else {
+                server.Publish("lastnames", RandomItem(lastNames))
+            }
 			<-time.After(2 * time.Second)
 		}
 	}()
 
 	select {}
 }
+
+func RandomItem(items []string) []byte {
+    return []byte(items[rand.Intn(len(items))])
+}
+
 ```

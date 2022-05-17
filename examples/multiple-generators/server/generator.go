@@ -1,10 +1,9 @@
 package main
 
 import (
+	"github.com/snapp-incubator/qsse"
 	"math/rand"
 	"time"
-
-	"github.com/snapp-incubator/qsse"
 )
 
 func RandomText(length int) []byte {
@@ -17,9 +16,9 @@ func RandomText(length int) []byte {
 	return bytes
 }
 
-func generate(topic string, server *qsse.Server, rate time.Duration) {
+func generate(topic string, server qsse.Server, rate time.Duration) {
 	for {
-		server.PublishEvent(topic, RandomText(10))
+		server.Publish(topic, RandomText(10))
 
 		time.Sleep(rate)
 	}
