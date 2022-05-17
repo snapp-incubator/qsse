@@ -3,8 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	"github.com/snapp-incubator/qsse"
+	"github.com/snapp-incubator/qsse/pkg"
 )
 
 func main() {
@@ -22,7 +21,7 @@ func main() {
 }
 
 func subscribe(clientID int, topics []string) {
-	client, err := qsse.NewClient("localhost:8080", topics, nil)
+	client, err := pkg.NewClient("localhost:8080", topics, nil)
 	if err != nil {
 		panic(err)
 	}

@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/snapp-incubator/qsse/pkg"
 	"log"
 	"math/rand"
 	"time"
-
-	"github.com/snapp-incubator/qsse"
 )
 
 var firstNames = []string{"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",
@@ -26,7 +25,7 @@ func main() {
 
 	topics := []string{"firstnames", "lastnames"}
 
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics)
+	server, err := pkg.NewServer("localhost:4242", pkg.GetDefaultTLSConfig(), topics)
 	if err != nil {
 		panic(err)
 	}

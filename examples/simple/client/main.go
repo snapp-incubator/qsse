@@ -1,15 +1,17 @@
 package main
 
-import "github.com/snapp-incubator/qsse"
+import (
+	"github.com/snapp-incubator/qsse/pkg"
+)
 
 func main() {
-	config := &qsse.ClientConfig{
+	config := &pkg.ClientConfig{
 		Token:     "secret",
 		TLSConfig: nil,
 	}
 	topics := []string{"firstnames", "lastnames"}
 
-	_, err := qsse.NewClient("localhost:4242", topics, config)
+	_, err := pkg.NewClient("localhost:4242", topics, config)
 	if err != nil {
 		panic(err)
 	}

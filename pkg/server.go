@@ -1,4 +1,4 @@
-package qsse
+package pkg
 
 import (
 	"crypto/tls"
