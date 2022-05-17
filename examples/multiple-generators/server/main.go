@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/snapp-incubator/qsse/pkg"
+	"github.com/snapp-incubator/qsse"
 	"math/rand"
 	"time"
 )
@@ -19,7 +19,7 @@ func main() {
 
 	topics := []string{"topic1", "topic2", "topic3"}
 
-	server, err := pkg.NewServer("localhost:8080", pkg.GetDefaultTLSConfig(), topics)
+	server, err := qsse.NewServer("localhost:8080", qsse.GetDefaultTLSConfig(), topics)
 	if err != nil {
 		panic(err)
 	}
