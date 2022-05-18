@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+
+	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 )
@@ -12,7 +14,7 @@ import (
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
-	SetErrorHandler(handler func(code int, err error))
+	SetErrorHandler(handler func(code int, data map[string]any))
 
 	SetMessageHandler(handler func(topic string, event []byte))
 }
@@ -44,12 +46,17 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	stream, _ := connection.OpenUniStream()
 
-	internal.WriteData(bytes, stream)
-	stream.Close()
+	if err = internal.WriteData(bytes, stream); err != nil {
+		return nil, errors.Errorf("failed to send offer: %v", err)
+	}
+
+	if err = stream.Close(); err != nil {
+		return nil, errors.Errorf("failed to close send stream: %v", err)
+	}
 
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to open receive stream: %v", err)
 	}
 
 	reader := bufio.NewReader(receiveStream)

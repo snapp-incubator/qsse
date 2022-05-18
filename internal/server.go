@@ -80,9 +80,13 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 		if _, ok := s.EventSources[topic]; ok {
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
 		} else {
-			errBytes, _ := json.Marshal(ErrTopicNotAvailable(topic))
+			e := NewErr(CodeTopicNotAvailable, map[string]any{
+				"topic": topic,
+			})
+			errBytes, _ := json.Marshal(e)
 			errEvent := NewEvent(ErrorTopic, errBytes)
-			WriteData(errEvent, sendStream)
+			err := WriteData(errEvent, sendStream)
+			checkError(err)
 		}
 	}
 }

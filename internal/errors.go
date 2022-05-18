@@ -6,25 +6,34 @@ import (
 )
 
 type Error struct {
-	Err  error `json:"err,omitempty"`
-	Code int   `json:"code,omitempty"`
+	Code int            `json:"code,omitempty"`
+	Data map[string]any `json:"data,omitempty"`
 }
 
 const ErrorTopic = "error"
 
-var ErrNotAuthorized = errors.New("not authorized")
+var (
+	ErrNotAuthorized = errors.New("not authorized")
+)
 
 const (
 	CodeNotAuthorized = iota + 1
 	CodeTopicNotAvailable
 )
 
-func ErrTopicNotAvailable(topic string) Error {
-	return Error{Err: errors.New("topic not available: " + topic), Code: CodeTopicNotAvailable}
+func NewErr(code int, data map[string]any) *Error {
+	return &Error{
+		Code: code,
+		Data: data,
+	}
 }
 
 func UnmarshalError(bytes []byte) Error {
-	var err Error
-	json.Unmarshal(bytes, &err)
-	return err
+	var e Error
+
+	if err := json.Unmarshal(bytes, &e); err != nil {
+		checkError(errors.New("failed to unmarshal error: " + err.Error()))
+	}
+
+	return e
 }
