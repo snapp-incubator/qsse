@@ -13,6 +13,7 @@ const DELIMITER = '\n'
 
 // Server is the main struct for the server.
 type Server struct {
+	Worker       Worker
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 
@@ -60,6 +61,7 @@ func (s *Server) handleClient(client *Subscriber) {
 	isValid := s.Authenticate(client.Token)
 	if !isValid {
 		log.Println("client is not authenticated")
+
 		err := client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error())
 		checkError(err)
 
@@ -99,7 +101,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 			log.Printf("creating new event source for topic %s", topic)
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
 
-			go s.EventSources[topic].TransferEvents()
+			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
 	}
 }
