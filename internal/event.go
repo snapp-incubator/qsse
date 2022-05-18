@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/lucas-clemente/quic-go"
@@ -31,12 +32,14 @@ func NewEvent(topic string, data []byte) *Event {
 func (receiver *EventSource) transferEvents() {
 	for event := range receiver.DataChannel {
 		log.Println("Number of Subscribers:", len(receiver.Subscribers))
+
 		for i, subscriber := range receiver.Subscribers {
 			log.Println("Sending event to subscriber for topic:", receiver.Topic)
 			event := NewEvent(receiver.Topic, event)
-			err := WriteData(event, subscriber)
-			if err != nil {
+
+			if err := WriteData(event, subscriber); err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
+
 				receiver.Subscribers = append(receiver.Subscribers[:i], receiver.Subscribers[i+1:]...)
 			}
 		}
@@ -45,20 +48,25 @@ func (receiver *EventSource) transferEvents() {
 
 // WriteData writes data to stream.
 func WriteData(data any, sendStream quic.SendStream) error {
-	var err error
-	switch data.(type) {
+	switch data := data.(type) {
 	case []byte:
-		_, err = sendStream.Write(data.([]byte))
+		if _, err := sendStream.Write(data); err != nil {
+			return fmt.Errorf("write on stream failed %w", err)
+		}
 	default:
-		bytes, _ := json.Marshal(data)
-		_, err = sendStream.Write(bytes)
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			return fmt.Errorf("marshaling data to json failed %w", err)
+		}
+
+		if _, err := sendStream.Write(bytes); err != nil {
+			return fmt.Errorf("write on stream failed %w", err)
+		}
 	}
 
-	if err != nil {
-		return err
+	if _, err := sendStream.Write([]byte{DELIMITER}); err != nil {
+		return fmt.Errorf("write on stream failed %w", err)
 	}
 
-	_, err = sendStream.Write([]byte{DELIMITER})
-
-	return err
+	return nil
 }
