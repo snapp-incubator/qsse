@@ -3,8 +3,10 @@ package internal
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/lucas-clemente/quic-go"
 	"log"
+
+	"github.com/go-errors/errors"
+	"github.com/lucas-clemente/quic-go"
 )
 
 type Client struct {
@@ -14,7 +16,7 @@ type Client struct {
 
 	OnEvent   map[string]func(event []byte)
 	OnMessage func(topic string, message []byte)
-	OnError   func(code int, message error)
+	OnError   func(code int, data map[string]any)
 }
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
@@ -24,8 +26,8 @@ var DefaultOnMessage = func(topic string, message []byte) {
 
 // DefaultOnError Default handler for processing errors.
 // it listen to topic "error"
-var DefaultOnError = func(code int, message error) {
-	log.Printf("Error: %d - %+v\n", code, message)
+var DefaultOnError = func(code int, data map[string]any) {
+	log.Printf("Error: %d - %+v\n", code, data)
 }
 
 // AcceptEvents reads events from the stream and calls the proper handler.
@@ -41,11 +43,14 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		}
 
 		var event Event
-		json.Unmarshal(bytes, &event)
+		err = json.Unmarshal(bytes, &event)
+		if err != nil {
+			checkError(errors.Errorf("failed to unmarshal event: %+v", err))
+		}
 
 		if event.Topic == ErrorTopic {
 			err := UnmarshalError(event.Data)
-			c.OnError(err.Code, err.Err)
+			c.OnError(err.Code, err.Data)
 		} else if c.OnEvent[event.Topic] != nil {
 			c.OnEvent[event.Topic](event.Data)
 		} else {
@@ -60,11 +65,11 @@ func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
 }
 
 // SetErrorHandler sets the handler for "error" topic.
-func (c *Client) SetErrorHandler(handler func(code int, err error)) {
+func (c *Client) SetErrorHandler(handler func(code int, data map[string]any)) {
 	c.OnError = handler
 }
 
 // SetMessageHandler sets the handler for all topics without handler and "error" topic.
-func (c Client) SetMessageHandler(handler func(topic string, message []byte)) {
+func (c *Client) SetMessageHandler(handler func(topic string, message []byte)) {
 	c.OnMessage = handler
 }
