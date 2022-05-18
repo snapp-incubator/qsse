@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lucas-clemente/quic-go"
 	"log"
+
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -71,7 +71,6 @@ func (s *Server) handleClient(client *Subscriber) {
 	checkError(err)
 
 	s.addClientTopicsToEventSources(client, sendStream)
-
 }
 
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.

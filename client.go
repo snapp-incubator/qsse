@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 )

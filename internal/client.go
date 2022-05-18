@@ -3,8 +3,8 @@ package internal
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/lucas-clemente/quic-go"
 	"log"
+
 )
 
 type Client struct {
@@ -23,7 +23,7 @@ var DefaultOnMessage = func(topic string, message []byte) {
 }
 
 // DefaultOnError Default handler for processing errors.
-// it listen to topic "error"
+// it listen to topic "error".
 var DefaultOnError = func(code int, message error) {
 	log.Printf("Error: %d - %+v\n", code, message)
 }
@@ -32,7 +32,7 @@ var DefaultOnError = func(code int, message error) {
 // order of calling handlers is as follows:
 // 1. OnError if topic is "error"
 // 2. OnEvent[topic]
-// 3. OnMessage
+// 3. OnMessage.
 func (c *Client) AcceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, err := reader.ReadBytes(DELIMITER)
