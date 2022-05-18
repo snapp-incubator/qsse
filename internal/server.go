@@ -3,9 +3,9 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
+	"github.com/lucas-clemente/quic-go"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -91,7 +91,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
 
 			go s.EventSources[topic].transferEvents()
 		}
@@ -100,6 +100,6 @@ func (s *Server) GenerateEventSources(topics []string) {
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/lucas-clemente/quic-go"
 )
 
 type Client struct {

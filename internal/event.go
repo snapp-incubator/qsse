@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/lucas-clemente/quic-go"
 )
 
 // EventSource is a struct for topic channel and its subscribers.

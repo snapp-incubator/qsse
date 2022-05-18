@@ -13,7 +13,7 @@ const protocol = "PROTOCOL_QUIC"
 
 // GetDefaultTLSConfig returns a tls.Config with the default settings for server.
 func GetDefaultTLSConfig() *tls.Config {
-	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		panic(err)
 	}
