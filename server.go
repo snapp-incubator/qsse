@@ -2,6 +2,7 @@ package qsse
 
 import (
 	"crypto/tls"
+
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
@@ -21,6 +22,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	}
 
 	server := internal.Server{
+		Worker:       internal.NewWorker(),
 		Listener:     listener,
 		Authenticate: internal.DefaultAuthenticationFunc,
 		EventSources: make(map[string]*internal.EventSource),

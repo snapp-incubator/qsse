@@ -2,8 +2,9 @@ package internal
 
 import (
 	"encoding/json"
+
+	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
-	"log"
 )
 
 // EventSource is a struct for topic channel and its subscribers.
@@ -26,35 +27,27 @@ func NewEvent(topic string, data []byte) *Event {
 	return &Event{Topic: topic, Data: data}
 }
 
-// transferEvents distribute events from channel between subscribers.
-func (receiver *EventSource) transferEvents() {
+// TransferEvents distribute events from channel between subscribers.
+func (receiver *EventSource) TransferEvents(worker Worker) {
 	for event := range receiver.DataChannel {
-		log.Println("Number of Subscribers:", len(receiver.Subscribers))
-		for i, subscriber := range receiver.Subscribers {
-			log.Println("Sending event to subscriber for topic:", receiver.Topic)
-			event := NewEvent(receiver.Topic, event)
-			err := WriteData(event, subscriber)
-			if err != nil {
-				log.Printf("err while sending event to client: %s", err.Error())
-				receiver.Subscribers = append(receiver.Subscribers[:i], receiver.Subscribers[i+1:]...)
-			}
-		}
+		work := NewSubscribeWork(event, receiver)
+		worker.SubscribePool.Process(work)
 	}
 }
 
 // WriteData writes data to stream.
 func WriteData(data any, sendStream quic.SendStream) error {
 	var err error
-	switch data.(type) {
+	switch t := data.(type) {
 	case []byte:
-		_, err = sendStream.Write(data.([]byte))
+		_, err = sendStream.Write(t)
 	default:
-		bytes, _ := json.Marshal(data)
+		bytes, _ := json.Marshal(data) //nolint:errchkjson
 		_, err = sendStream.Write(bytes)
 	}
 
 	if err != nil {
-		return err
+		return errors.Errorf("failed to write data: %v", err)
 	}
 
 	_, err = sendStream.Write([]byte{DELIMITER})

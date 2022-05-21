@@ -3,9 +3,9 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/lucas-clemente/quic-go"
 	"log"
+
+	"github.com/lucas-clemente/quic-go"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -13,6 +13,7 @@ const DELIMITER = '\n'
 
 // Server is the main struct for the server.
 type Server struct {
+	Worker       Worker
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 
@@ -60,7 +61,9 @@ func (s *Server) handleClient(client *Subscriber) {
 	isValid := s.Authenticate(client.Token)
 	if !isValid {
 		log.Println("client is not authenticated")
-		client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error())
+
+		err := client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error())
+		checkError(err)
 
 		return
 	}
@@ -80,9 +83,13 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 		if _, ok := s.EventSources[topic]; ok {
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
 		} else {
-			errBytes, _ := json.Marshal(ErrTopicNotAvailable(topic))
+			e := NewErr(CodeTopicNotAvailable, map[string]any{
+				"topic": topic,
+			})
+			errBytes, _ := json.Marshal(e)
 			errEvent := NewEvent(ErrorTopic, errBytes)
-			WriteData(errEvent, sendStream)
+			err := WriteData(errEvent, sendStream)
+			checkError(err)
 		}
 	}
 }
@@ -94,13 +101,13 @@ func (s *Server) GenerateEventSources(topics []string) {
 			log.Printf("creating new event source for topic %s", topic)
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
 
-			go s.EventSources[topic].transferEvents()
+			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
 	}
 }
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 }
