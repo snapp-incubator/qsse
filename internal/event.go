@@ -2,8 +2,8 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
 )
 
@@ -37,20 +37,25 @@ func (receiver *EventSource) TransferEvents(worker Worker) {
 
 // WriteData writes data to stream.
 func WriteData(data any, sendStream quic.SendStream) error {
-	var err error
-	switch t := data.(type) {
+	switch data := data.(type) {
 	case []byte:
-		_, err = sendStream.Write(t)
+		if _, err := sendStream.Write(data); err != nil {
+			return fmt.Errorf("write on stream failed %w", err)
+		}
 	default:
-		bytes, _ := json.Marshal(data) //nolint:errchkjson
-		_, err = sendStream.Write(bytes)
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			return fmt.Errorf("marshaling data to json failed %w", err)
+		}
+
+		if _, err := sendStream.Write(bytes); err != nil {
+			return fmt.Errorf("write on stream failed %w", err)
+		}
 	}
 
-	if err != nil {
-		return errors.Errorf("failed to write data: %v", err)
+	if _, err := sendStream.Write([]byte{DELIMITER}); err != nil {
+		return fmt.Errorf("write on stream failed %w", err)
 	}
 
-	_, err = sendStream.Write([]byte{DELIMITER})
-
-	return err
+	return nil
 }

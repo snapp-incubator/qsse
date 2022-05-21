@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 
-	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 )
@@ -29,7 +28,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
 	client := internal.Client{
@@ -42,22 +41,15 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
-	bytes, _ := json.Marshal(offer)
+	bytes, _ := json.Marshal(offer) //nolint:errchkjson
 
 	stream, _ := connection.OpenUniStream()
 
-	if err = internal.WriteData(bytes, stream); err != nil {
-		return nil, errors.Errorf("failed to send offer: %v", err)
-	}
+	_ = internal.WriteData(bytes, stream)
 
-	if err = stream.Close(); err != nil {
-		return nil, errors.Errorf("failed to close send stream: %v", err)
-	}
+	_ = stream.Close()
 
-	receiveStream, err := connection.AcceptUniStream(context.Background())
-	if err != nil {
-		return nil, errors.Errorf("failed to open receive stream: %v", err)
-	}
+	receiveStream, _ := connection.AcceptUniStream(context.Background())
 
 	reader := bufio.NewReader(receiveStream)
 	go client.AcceptEvents(reader)

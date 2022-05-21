@@ -21,7 +21,7 @@ type Server struct {
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
-var DefaultAuthenticationFunc = func(token string) bool {
+var DefaultAuthenticationFunc = func(token string) bool { //nolint:gochecknoglobals
 	return true
 }
 
@@ -74,7 +74,6 @@ func (s *Server) handleClient(client *Subscriber) {
 	checkError(err)
 
 	s.addClientTopicsToEventSources(client, sendStream)
-
 }
 
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
@@ -86,7 +85,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 			e := NewErr(CodeTopicNotAvailable, map[string]any{
 				"topic": topic,
 			})
-			errBytes, _ := json.Marshal(e)
+			errBytes, _ := json.Marshal(e) //nolint:errchkjson
 			errEvent := NewEvent(ErrorTopic, errBytes)
 			err := WriteData(errEvent, sendStream)
 			checkError(err)
@@ -99,7 +98,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), *new([]quic.SendStream))
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
