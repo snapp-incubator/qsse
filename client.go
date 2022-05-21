@@ -28,7 +28,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
 	client := internal.Client{
@@ -41,16 +41,15 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
-	bytes, _ := json.Marshal(offer)
+	bytes, _ := json.Marshal(offer) //nolint:errchkjson
 
 	stream, _ := connection.OpenUniStream()
 
-	internal.WriteData(bytes, stream)
+	_ = internal.WriteData(bytes, stream)
 
-	stream.Close()
-  
+	_ = stream.Close()
+
 	receiveStream, _ := connection.AcceptUniStream(context.Background())
-
 
 	reader := bufio.NewReader(receiveStream)
 	go client.AcceptEvents(reader)

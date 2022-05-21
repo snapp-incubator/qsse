@@ -19,13 +19,13 @@ type Client struct {
 }
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
-var DefaultOnMessage = func(topic string, message []byte) {
+var DefaultOnMessage = func(topic string, message []byte) { //nolint:gochecknoglobals
 	log.Printf("topic: %s\ndata: %s\n", topic, string(message))
 }
 
 // DefaultOnError Default handler for processing errors.
-// it listen to topic "error"
-var DefaultOnError = func(code int, data map[string]any) {
+// it listen to topic "error".
+var DefaultOnError = func(code int, data map[string]any) { //nolint:gochecknoglobals
 	log.Printf("Error: %d - %+v\n", code, data)
 }
 
@@ -42,17 +42,17 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		}
 
 		var event Event
-		err = json.Unmarshal(bytes, &event)
-		if err != nil {
+		if err = json.Unmarshal(bytes, &event); err != nil {
 			checkError(err)
 		}
 
-		if event.Topic == ErrorTopic {
+		switch {
+		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data)
 			c.OnError(err.Code, err.Data)
-		} else if c.OnEvent[event.Topic] != nil {
+		case c.OnEvent[event.Topic] != nil:
 			c.OnEvent[event.Topic](event.Data)
-		} else {
+		default:
 			c.OnMessage(event.Topic, event.Data)
 		}
 	}

@@ -12,9 +12,7 @@ type Error struct {
 
 const ErrorTopic = "error"
 
-var (
-	ErrNotAuthorized = errors.New("not authorized")
-)
+var ErrNotAuthorized = errors.New("not authorized")
 
 const (
 	CodeNotAuthorized = iota + 1
@@ -32,7 +30,7 @@ func UnmarshalError(bytes []byte) Error {
 	var e Error
 
 	if err := json.Unmarshal(bytes, &e); err != nil {
-		checkError(errors.New("failed to unmarshal error: " + err.Error()))
+		checkError(err)
 	}
 
 	return e

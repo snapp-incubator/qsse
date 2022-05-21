@@ -21,7 +21,7 @@ type Server struct {
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
-var DefaultAuthenticationFunc = func(token string) bool {
+var DefaultAuthenticationFunc = func(token string) bool { //nolint:gochecknoglobals
 	return true
 }
 
@@ -85,7 +85,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 			e := NewErr(CodeTopicNotAvailable, map[string]any{
 				"topic": topic,
 			})
-			errBytes, _ := json.Marshal(e)
+			errBytes, _ := json.Marshal(e) //nolint:errchkjson
 			errEvent := NewEvent(ErrorTopic, errBytes)
 			err := WriteData(errEvent, sendStream)
 			checkError(err)

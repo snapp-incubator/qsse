@@ -22,7 +22,13 @@ func NewWorker() Worker {
 	numCPU := runtime.NumCPU()
 
 	worker.SubscribePool = tunny.NewFunc(numCPU, func(work any) any {
-		data := work.(*SubscribeWork)
+		data, ok := work.(*SubscribeWork)
+		if !ok {
+			log.Println("Worker: invalid work input")
+
+			return nil
+		}
+
 		topic := data.EventSource.Topic
 		event := data.Event
 		eventSource := data.EventSource
