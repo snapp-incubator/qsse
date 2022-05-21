@@ -3,12 +3,12 @@ module github.com/snapp-incubator/qsse
 go 1.18
 
 require (
-	github.com/go-errors/errors v1.0.1
+	github.com/Jeffail/tunny v0.1.4
+	github.com/go-errors/errors v1.4.2
 	github.com/lucas-clemente/quic-go v0.27.0
 )
 
 require (
-	github.com/Jeffail/tunny v0.1.4 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
