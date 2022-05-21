@@ -22,6 +22,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	}
 
 	server := internal.Server{
+		Worker:       internal.NewWorker(),
 		Listener:     listener,
 		Authenticate: internal.DefaultAuthenticationFunc,
 		EventSources: make(map[string]*internal.EventSource),

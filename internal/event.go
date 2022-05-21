@@ -28,21 +28,11 @@ func NewEvent(topic string, data []byte) *Event {
 	return &Event{Topic: topic, Data: data}
 }
 
-// transferEvents distribute events from channel between subscribers.
-func (receiver *EventSource) transferEvents() {
+// TransferEvents distribute events from channel between subscribers.
+func (receiver *EventSource) TransferEvents(worker Worker) {
 	for event := range receiver.DataChannel {
-		log.Println("Number of Subscribers:", len(receiver.Subscribers))
-
-		for i, subscriber := range receiver.Subscribers {
-			log.Println("Sending event to subscriber for topic:", receiver.Topic)
-			event := NewEvent(receiver.Topic, event)
-
-			if err := WriteData(event, subscriber); err != nil {
-				log.Printf("err while sending event to client: %s", err.Error())
-
-				receiver.Subscribers = append(receiver.Subscribers[:i], receiver.Subscribers[i+1:]...)
-			}
-		}
+		work := NewSubscribeWork(event, receiver)
+		worker.SubscribePool.Process(work)
 	}
 }
 

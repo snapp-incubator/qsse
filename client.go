@@ -13,7 +13,7 @@ import (
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
-	SetErrorHandler(handler func(code int, err error))
+	SetErrorHandler(handler func(code int, data map[string]any))
 
 	SetMessageHandler(handler func(topic string, event []byte))
 }
@@ -46,12 +46,11 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	stream, _ := connection.OpenUniStream()
 
 	internal.WriteData(bytes, stream)
-	stream.Close()
 
-	receiveStream, err := connection.AcceptUniStream(context.Background())
-	if err != nil {
-		return nil, err
-	}
+	stream.Close()
+  
+	receiveStream, _ := connection.AcceptUniStream(context.Background())
+
 
 	reader := bufio.NewReader(receiveStream)
 	go client.AcceptEvents(reader)
