@@ -3,7 +3,6 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/lucas-clemente/quic-go"
 )
