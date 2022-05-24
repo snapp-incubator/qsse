@@ -5,18 +5,18 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
+	"github.com/snapp-incubator/qsse/auth"
 	"github.com/snapp-incubator/qsse/internal"
-	"github.com/snapp-incubator/qsse/pkg"
 )
 
 type Server interface {
 	Publish(topic string, event []byte)
 
-	SetAuthenticator(pkg.Autheticator)
-	SetAuthenticatorFunc(pkg.AutheticatorFunc)
+	SetAuthenticator(auth.Autheticator)
+	SetAuthenticatorFunc(auth.AutheticatorFunc)
 
-	SetAuthorizer(pkg.Authorizer)
-	SetAuthorizerFunc(pkg.AuthorizerFunc)
+	SetAuthorizer(auth.Authorizer)
+	SetAuthorizerFunc(auth.AuthorizerFunc)
 }
 
 // NewServer creates a new server and listen for connections on the given address.
@@ -29,8 +29,8 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	server := internal.Server{
 		Worker:       internal.NewWorker(),
 		Listener:     listener,
-		Autheticator: pkg.AutheticatorFunc(internal.DefaultAuthenticationFunc),
-		Authorizer:   pkg.AuthorizerFunc(internal.DefaultAuthorizationFunc),
+		Autheticator: auth.AutheticatorFunc(internal.DefaultAuthenticationFunc),
+		Authorizer:   auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
 		EventSources: make(map[string]*internal.EventSource),
 	}
 
