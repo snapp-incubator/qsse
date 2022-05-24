@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/lucas-clemente/quic-go"
-	"github.com/snapp-incubator/qsse/pkg"
+	"github.com/snapp-incubator/qsse/auth"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -18,8 +18,8 @@ type Server struct {
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 
-	Autheticator pkg.Autheticator
-	Authorizer   pkg.Authorizer
+	Autheticator auth.Autheticator
+	Authorizer   auth.Authorizer
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
@@ -40,22 +40,22 @@ func (s *Server) Publish(topic string, event []byte) {
 }
 
 // SetAuthenticator replaces the authentication function.
-func (s *Server) SetAuthenticator(authenticator pkg.Autheticator) {
+func (s *Server) SetAuthenticator(authenticator auth.Autheticator) {
 	s.Autheticator = authenticator
 }
 
 // SetAuthenticatorFunc replaces the authentication function.
-func (s *Server) SetAuthenticatorFunc(authenticator pkg.AutheticatorFunc) {
+func (s *Server) SetAuthenticatorFunc(authenticator auth.AutheticatorFunc) {
 	s.Autheticator = authenticator
 }
 
 // SetAuthorizer replaces the authentication function.
-func (s *Server) SetAuthorizer(authorizer pkg.Authorizer) {
+func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
 	s.Authorizer = authorizer
 }
 
 // SetAuthenticatorFunc replaces the authentication function.
-func (s *Server) SetAuthorizerFunc(authorizer pkg.AuthorizerFunc) {
+func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
 }
 
