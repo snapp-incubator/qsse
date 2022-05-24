@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/lucas-clemente/quic-go"
+	"github.com/snapp-incubator/qsse/auth"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -17,11 +18,17 @@ type Server struct {
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 
-	Authenticate func(token string) bool
+	Autheticator auth.Autheticator
+	Authorizer   auth.Authorizer
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
-var DefaultAuthenticationFunc = func(token string) bool { //nolint:gochecknoglobals
+func DefaultAuthenticationFunc(token string) bool {
+	return true
+}
+
+// DefaultAuthenticationFunc is the default authorization function. it accepts all clients.
+func DefaultAuthorizationFunc(token, topic string) bool {
 	return true
 }
 
@@ -32,9 +39,24 @@ func (s *Server) Publish(topic string, event []byte) {
 	}
 }
 
-// SetAuthentication replaces the authentication function.
-func (s *Server) SetAuthentication(authenticateFunc func(token string) bool) {
-	s.Authenticate = authenticateFunc
+// SetAuthenticator replaces the authentication function.
+func (s *Server) SetAuthenticator(authenticator auth.Autheticator) {
+	s.Autheticator = authenticator
+}
+
+// SetAuthenticatorFunc replaces the authentication function.
+func (s *Server) SetAuthenticatorFunc(authenticator auth.AutheticatorFunc) {
+	s.Autheticator = authenticator
+}
+
+// SetAuthorizer replaces the authentication function.
+func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
+	s.Authorizer = authorizer
+}
+
+// SetAuthenticatorFunc replaces the authentication function.
+func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
+	s.Authorizer = authorizer
 }
 
 // AcceptClients accepts clients and do the following steps.
@@ -58,7 +80,7 @@ func (s *Server) AcceptClients() {
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
 func (s *Server) handleClient(client *Subscriber) {
-	isValid := s.Authenticate(client.Token)
+	isValid := s.Autheticator.Authenticate(client.Token)
 	if !isValid {
 		log.Println("client is not authenticated")
 
@@ -79,6 +101,12 @@ func (s *Server) handleClient(client *Subscriber) {
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
 func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
 	for _, topic := range client.Topics {
+		if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
+			log.Printf("client is not authorized for %s", topic)
+
+			continue
+		}
+
 		if _, ok := s.EventSources[topic]; ok {
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
 		} else {
