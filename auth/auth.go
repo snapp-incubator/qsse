@@ -1,4 +1,4 @@
-package pkg
+package auth
 
 // Autheticator authenticate clients on connection without paying attention
 // to their subscription and etc.
