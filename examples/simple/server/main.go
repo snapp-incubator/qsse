@@ -1,25 +1,31 @@
 package main
 
 import (
-	"github.com/snapp-incubator/qsse"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/snapp-incubator/qsse"
 )
 
-var firstNames = []string{"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",
+var firstNames = []string{
+	"Harry", "Ross", "Bruce", "Cook", "Carolyn", "Morgan",
 	"Albert", "Walker", "Randy", "Reed", "Larry", "Barnes", "Lois", "Wilson",
 	"Jesse", "Campbell", "Ernest", "Rogers", "Theresa", "Patterson", "Henry",
-	"Simmons", "Michelle", "Perry", "Frank", "Butler", "Shirley"}
+	"Simmons", "Michelle", "Perry", "Frank", "Butler", "Shirley",
+}
 
-var lastNames = []string{"Ruth", "Jackson", "Debra", "Allen", "Gerald", "Harris",
+var lastNames = []string{
+	"Ruth", "Jackson", "Debra", "Allen", "Gerald", "Harris",
 	"Raymond", "Carter", "Jacqueline", "Torres", "Joseph", "Nelson", "Carlos",
 	"Sanchez", "Ralph", "Clark", "Jean", "Alexander", "Stephen", "Roberts",
-	"Eric", "Long", "Amanda", "Scott", "Teresa", "Diaz", "Wanda", "Thomas"}
+	"Eric", "Long", "Amanda", "Scott", "Teresa", "Diaz", "Wanda", "Thomas",
+}
 
 func main() {
 	authenticateFunc := func(token string) bool {
 		log.Printf("Authenticating token: %s", token)
+
 		return token == "secret"
 	}
 
@@ -29,7 +35,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAuthentication(authenticateFunc)
+
+	server.SetAuthenticatorFunc(authenticateFunc)
 
 	go func() {
 		for {
@@ -38,6 +45,7 @@ func main() {
 			} else {
 				server.Publish("lastnames", RandomItem(lastNames))
 			}
+
 			<-time.After(2 * time.Second)
 		}
 	}()
