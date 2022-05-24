@@ -26,6 +26,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 		Listener:     listener,
 		Authenticate: internal.DefaultAuthenticationFunc,
 		EventSources: make(map[string]*internal.EventSource),
+		Topics:       topics,
 	}
 
 	server.GenerateEventSources(topics)
