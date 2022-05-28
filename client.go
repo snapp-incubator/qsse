@@ -11,6 +11,11 @@ import (
 	"github.com/snapp-incubator/qsse/internal"
 )
 
+const (
+	reconnectRetryNumber   = 5
+	reconnectRetryInterval = 5
+)
+
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
@@ -79,6 +84,11 @@ func processConfig(config *ClientConfig) ClientConfig {
 		return ClientConfig{
 			Token:     "",
 			TLSConfig: GetSimpleTLS(),
+			ReconnectPolicy: ReconnectPolicy{
+				Retry:         false,
+				RetryTimes:    reconnectRetryNumber,
+				RetryInterval: reconnectRetryInterval,
+			},
 		}
 	}
 
