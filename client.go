@@ -37,7 +37,14 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		if config.ReconnectPolicy.Retry {
+			connection, err = reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err //nolint:wrapcheck
+		}
 	}
 
 	client := internal.Client{
@@ -82,10 +89,6 @@ func processConfig(config *ClientConfig) ClientConfig {
 }
 
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, error) {
-	if !policy.Retry {
-		return nil, errors.New("reconnect policy is not set")
-	}
-
 	for i := 0; i < policy.RetryTimes; i++ {
 		connection, err := quic.DialAddr(address, tlcCfg, nil)
 		if err == nil {
@@ -95,5 +98,5 @@ func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic
 		time.Sleep(time.Duration(policy.RetryInterval) * time.Second)
 	}
 
-	return nil, errors.New("reconnecting failed")
+	return nil, errors.New("connection failed: reconnecting failed")
 }
