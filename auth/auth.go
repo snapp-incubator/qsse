@@ -1,14 +1,14 @@
 package auth
 
-// Autheticator authenticate clients on connection without paying attention
-// to their subscription and etc.
-type Autheticator interface {
+// Authenticator authenticate clients on connection without paying attention
+// to their subscription etc.
+type Authenticator interface {
 	Authenticate(token string) bool
 }
 
-type AutheticatorFunc func(token string) bool
+type AuthenticatorFunc func(token string) bool
 
-func (a AutheticatorFunc) Authenticate(token string) bool {
+func (a AuthenticatorFunc) Authenticate(token string) bool {
 	return a(token)
 }
 

@@ -12,8 +12,8 @@ import (
 type Server interface {
 	Publish(topic string, event []byte)
 
-	SetAuthenticator(auth.Autheticator)
-	SetAuthenticatorFunc(auth.AutheticatorFunc)
+	SetAuthenticator(auth.Authenticator)
+	SetAuthenticatorFunc(auth.AuthenticatorFunc)
 
 	SetAuthorizer(auth.Authorizer)
 	SetAuthorizerFunc(auth.AuthorizerFunc)
@@ -27,12 +27,12 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	}
 
 	server := internal.Server{
-		Worker:       internal.NewWorker(),
-		Listener:     listener,
-		Autheticator: auth.AutheticatorFunc(internal.DefaultAuthenticationFunc),
-		Authorizer:   auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
-		EventSources: make(map[string]*internal.EventSource),
-		Topics:       topics,
+		Worker:        internal.NewWorker(),
+		Listener:      listener,
+		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
+		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
+		EventSources:  make(map[string]*internal.EventSource),
+		Topics:        topics,
 	}
 
 	server.GenerateEventSources(topics)

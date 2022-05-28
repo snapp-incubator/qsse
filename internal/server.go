@@ -19,8 +19,8 @@ type Server struct {
 	EventSources map[string]*EventSource
 	Topics       []string
 
-	Autheticator auth.Autheticator
-	Authorizer   auth.Authorizer
+	Authenticator auth.Authenticator
+	Authorizer    auth.Authorizer
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
@@ -44,13 +44,13 @@ func (s *Server) Publish(topic string, event []byte) {
 }
 
 // SetAuthenticator replaces the authentication function.
-func (s *Server) SetAuthenticator(authenticator auth.Autheticator) {
-	s.Autheticator = authenticator
+func (s *Server) SetAuthenticator(authenticator auth.Authenticator) {
+	s.Authenticator = authenticator
 }
 
 // SetAuthenticatorFunc replaces the authentication function.
-func (s *Server) SetAuthenticatorFunc(authenticator auth.AutheticatorFunc) {
-	s.Autheticator = authenticator
+func (s *Server) SetAuthenticatorFunc(authenticator auth.AuthenticatorFunc) {
+	s.Authenticator = authenticator
 }
 
 // SetAuthorizer replaces the authentication function.
@@ -84,7 +84,7 @@ func (s *Server) AcceptClients() {
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
 func (s *Server) handleClient(client *Subscriber) {
-	isValid := s.Autheticator.Authenticate(client.Token)
+	isValid := s.Authenticator.Authenticate(client.Token)
 	if !isValid {
 		log.Println("client is not authenticated")
 
