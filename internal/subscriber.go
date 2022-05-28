@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/lucas-clemente/quic-go"
+	"github.com/lucas-clemente/quic-go" //nolint:typecheck
 )
 
 type Subscriber struct {
-	connection quic.Connection
+	connection quic.Connection //nolint:typecheck
 	Token      string
 	Topics     []string
 }
@@ -23,7 +23,7 @@ func NewOffer(token string, topics []string) Offer {
 	return Offer{Token: token, Topics: topics}
 }
 
-func NewSubscriber(connection quic.Connection) *Subscriber {
+func NewSubscriber(connection quic.Connection) *Subscriber { //nolint:typecheck
 	stream, err := connection.AcceptUniStream(context.Background())
 	checkError(err)
 
