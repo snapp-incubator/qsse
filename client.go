@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
@@ -77,4 +79,21 @@ func processConfig(config *ClientConfig) ClientConfig {
 	}
 
 	return *config
+}
+
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, error) {
+	if !policy.Retry {
+		return nil, errors.New("reconnect policy is not set")
+	}
+
+	for i := 0; i < policy.RetryTimes; i++ {
+		connection, err := quic.DialAddr(address, tlcCfg, nil)
+		if err == nil {
+			return connection, nil //nolint:wrapcheck
+		}
+
+		time.Sleep(time.Duration(policy.RetryInterval) * time.Second)
+	}
+
+	return nil, errors.New("reconnecting failed")
 }
