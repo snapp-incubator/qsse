@@ -19,7 +19,11 @@ type Event struct {
 	Data  []byte `json:"data,omitempty"`
 }
 
-func NewEventSource(topic string, dataChannel chan []byte, subscribers []quic.SendStream) *EventSource {
+func NewEventSource(
+	topic string,
+	dataChannel chan []byte,
+	subscribers []quic.SendStream,
+) *EventSource {
 	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers}
 }
 

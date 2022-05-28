@@ -17,6 +17,7 @@ type Server struct {
 	Worker       Worker
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
+	Topics       []string
 
 	Autheticator auth.Autheticator
 	Authorizer   auth.Authorizer
@@ -34,8 +35,11 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
-	if source, ok := s.EventSources[topic]; ok {
-		source.DataChannel <- event
+	matchedTopics := FindTopicsList(s.Topics, topic)
+	for _, matchedTopic := range matchedTopics {
+		if source, ok := s.EventSources[matchedTopic]; ok {
+			source.DataChannel <- event
+		}
 	}
 }
 
@@ -84,7 +88,8 @@ func (s *Server) handleClient(client *Subscriber) {
 	if !isValid {
 		log.Println("client is not authenticated")
 
-		err := client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error())
+		code := quic.ApplicationErrorCode(CodeNotAuthorized)
+		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
 		checkError(err)
 
 		return
