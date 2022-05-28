@@ -29,6 +29,7 @@ jobs:
 
       - name: test
         run: |
+          go mod vendor
           go test -mod=vendor --race -gcflags=-l -v -coverprofile .coverage.out ./...
           rm -rf .coverage.out.tmp
           go tool cover -func .coverage.out
