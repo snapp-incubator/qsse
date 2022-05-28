@@ -1,8 +1,10 @@
-package internal
+package internal_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/snapp-incubator/qsse/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTopicHasWildcard(t *testing.T) {
@@ -36,7 +38,7 @@ func TestTopicHasWildcard(t *testing.T) {
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := topicHasWildcard(testCase.topic)
+			result := internal.TopicHasWildcard(testCase.topic)
 			assert.Equal(t, testCase.hasWildcard, result)
 		})
 	}
@@ -73,7 +75,7 @@ func TestFindTopicsList(t *testing.T) {
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := findTopicsList(testCase.topics, testCase.pattern)
+			result := internal.FindTopicsList(testCase.topics, testCase.pattern)
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 
@@ -110,7 +112,7 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := findRelatedWildcardTopics(testCase.topic, testCase.topics)
+			result := internal.FindRelatedWildcardTopics(testCase.topic, testCase.topics)
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 	}

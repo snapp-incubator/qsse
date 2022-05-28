@@ -10,8 +10,8 @@ const (
 	sep = '.'
 )
 
-//topicHasWildcard checks if the topic is a wildcard.
-func topicHasWildcard(topic string) bool {
+//TopicHasWildcard checks if the topic is a wildcard.
+func TopicHasWildcard(topic string) bool {
 	for i, c := range topic {
 		if c == pwc {
 			if (i == 0 || topic[i-1] == sep) &&
@@ -23,8 +23,8 @@ func topicHasWildcard(topic string) bool {
 	return false
 }
 
-//findTopicsList find topics that match the topic pattern.
-func findTopicsList(topics []string, pattern string) []string {
+//FindTopicsList find topics that match the topic pattern.
+func FindTopicsList(topics []string, pattern string) []string {
 	var matchedTopics []string
 
 	for _, topic := range topics {
@@ -39,11 +39,11 @@ func findTopicsList(topics []string, pattern string) []string {
 
 }
 
-//findRelatedWildcardTopics find topics patterns that are applicable to the given topic.
-func findRelatedWildcardTopics(topic string, topics []string) []string {
+//FindRelatedWildcardTopics find topics patterns that are applicable to the given topic.
+func FindRelatedWildcardTopics(topic string, topics []string) []string {
 	var matchedTopics []string
 	for _, pattern := range topics {
-		if topicHasWildcard(pattern) {
+		if TopicHasWildcard(pattern) {
 			ok, err := filepath.Match(pattern, topic)
 			if ok {
 				matchedTopics = append(matchedTopics, pattern)

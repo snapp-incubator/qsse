@@ -51,7 +51,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 			err := UnmarshalError(event.Data)
 			c.OnError(err.Code, err.Data)
 		case c.OnEvent[event.Topic] != nil:
-			topics := findRelatedWildcardTopics(event.Topic, c.Topics)
+			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
 			for _, topic := range topics {
 				c.OnEvent[topic](event.Data)
 			}
