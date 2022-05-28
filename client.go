@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
@@ -38,12 +37,14 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if config.ReconnectPolicy.Retry {
-			connection, err = reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
-			if err != nil {
+			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
+			if !res {
 				return nil, err
 			}
+
+			connection = c
 		} else {
-			return nil, err //nolint:wrapcheck
+			return nil, err
 		}
 	}
 
@@ -88,15 +89,15 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
-func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, error) {
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
 		connection, err := quic.DialAddr(address, tlcCfg, nil)
 		if err == nil {
-			return connection, nil //nolint:wrapcheck
+			return connection, true
 		}
 
 		time.Sleep(time.Duration(policy.RetryInterval) * time.Second)
 	}
 
-	return nil, errors.New("connection failed: reconnecting failed")
+	return nil, false
 }
