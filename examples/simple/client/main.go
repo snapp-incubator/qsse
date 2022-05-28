@@ -8,6 +8,9 @@ func main() {
 	config := &qsse.ClientConfig{
 		Token:     "secret",
 		TLSConfig: nil,
+		ReconnectPolicy: qsse.ReconnectPolicy{
+			Retry: false,
+		},
 	}
 	topics := []string{"firstnames", "lastnames"}
 

@@ -5,9 +5,16 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"log"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
+)
+
+const (
+	reconnectRetryNumber   = 5
+	reconnectRetryInterval = 5
 )
 
 type Client interface {
@@ -19,8 +26,15 @@ type Client interface {
 }
 
 type ClientConfig struct {
-	Token     string
-	TLSConfig *tls.Config
+	Token           string
+	TLSConfig       *tls.Config
+	ReconnectPolicy ReconnectPolicy
+}
+
+type ReconnectPolicy struct {
+	Retry         bool
+	RetryTimes    int
+	RetryInterval int
 }
 
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
@@ -28,7 +42,18 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		if config.ReconnectPolicy.Retry {
+			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
+			if !res {
+				log.Println("reconnecting failed")
+
+				return nil, err //nolint:wrapcheck
+			}
+
+			connection = c
+		} else {
+			return nil, err //nolint:wrapcheck
+		}
 	}
 
 	client := internal.Client{
@@ -62,6 +87,11 @@ func processConfig(config *ClientConfig) ClientConfig {
 		return ClientConfig{
 			Token:     "",
 			TLSConfig: GetSimpleTLS(),
+			ReconnectPolicy: ReconnectPolicy{
+				Retry:         false,
+				RetryTimes:    reconnectRetryNumber,
+				RetryInterval: reconnectRetryInterval,
+			},
 		}
 	}
 
@@ -70,4 +100,19 @@ func processConfig(config *ClientConfig) ClientConfig {
 	}
 
 	return *config
+}
+
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) {
+	for i := 0; i < policy.RetryTimes; i++ {
+		connection, err := quic.DialAddr(address, tlcCfg, nil)
+		if err == nil {
+			return connection, true
+		}
+
+		log.Println(err)
+
+		time.Sleep(time.Duration(policy.RetryInterval) * time.Second)
+	}
+
+	return nil, false
 }
