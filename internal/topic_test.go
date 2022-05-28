@@ -62,6 +62,12 @@ func TestFindTopicsList(t *testing.T) {
 			topics:        []string{"ride.accepted", "ride.rejected", "ride.finished", "offer.first"},
 			matchedTopics: []string{"ride.accepted", "ride.rejected", "ride.finished"},
 		},
+		{
+			name:          "has matched topics",
+			pattern:       "ride.accepted",
+			topics:        []string{"ride.accepted", "ride.rejected", "ride.finished", "offer.first"},
+			matchedTopics: []string{"ride.accepted"},
+		},
 	}
 
 	for _, test := range tests {
@@ -72,4 +78,41 @@ func TestFindTopicsList(t *testing.T) {
 		})
 
 	}
+}
+
+func TestFindRelatedWildcardTopics(t *testing.T) {
+	tests := []struct {
+		name          string
+		topic         string
+		topics        []string
+		matchedTopics []string
+	}{
+		{
+			name:          "empty result",
+			topic:         "call.*",
+			topics:        []string{"ride.*", "call.start", "ride.driver.*"},
+			matchedTopics: []string{},
+		},
+		{
+			name:          "has matched topic",
+			topic:         "ride.start",
+			topics:        []string{"ride.*", "call.start"},
+			matchedTopics: []string{"ride.*"},
+		},
+		{
+			name:          "has multiple matched topic",
+			topic:         "ride.driver.*",
+			topics:        []string{"ride.*", "call.start", "ride.driver.*"},
+			matchedTopics: []string{"ride.*", "ride.driver.*"},
+		},
+	}
+
+	for _, test := range tests {
+		testCase := test
+		t.Run(test.name, func(t *testing.T) {
+			result := findRelatedWildcardTopics(testCase.topic, testCase.topics)
+			assert.Equal(t, len(testCase.matchedTopics), len(result))
+		})
+	}
+
 }
