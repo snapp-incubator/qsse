@@ -34,7 +34,7 @@ type ClientConfig struct {
 type ReconnectPolicy struct {
 	Retry         bool
 	RetryTimes    int
-	RetryInterval int
+	RetryInterval int // duration between retry intervals in milliseconds
 }
 
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
@@ -43,6 +43,8 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if config.ReconnectPolicy.Retry {
+			log.Println("Failed to connect to server, retrying...")
+
 			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
 			if !res {
 				log.Println("reconnecting failed")
@@ -109,9 +111,9 @@ func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic
 			return connection, true
 		}
 
-		log.Println(err)
+		log.Printf("failed to reconnect: %+v", err)
 
-		time.Sleep(time.Duration(policy.RetryInterval) * time.Second)
+		time.Sleep(time.Duration(policy.RetryInterval) * time.Millisecond)
 	}
 
 	return nil, false
