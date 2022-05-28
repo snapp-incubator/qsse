@@ -36,3 +36,18 @@ func findTopicsList(topics []string, pattern string) []string {
 	return matchedTopics
 
 }
+
+func findRelatedWildcardTopics(topic string, topics []string) []string {
+	var matchedTopics []string
+	for _, pattern := range topics {
+		if topicHasWildcard(pattern) {
+			ok, err := filepath.Match(pattern, topic)
+			if ok {
+				matchedTopics = append(matchedTopics, pattern)
+			} else if err != nil {
+				log.Println("error in topic matching")
+			}
+		}
+	}
+	return matchedTopics
+}
