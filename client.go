@@ -28,7 +28,7 @@ type Client interface {
 type ClientConfig struct {
 	Token           string
 	TLSConfig       *tls.Config
-	ReconnectPolicy ReconnectPolicy
+	ReconnectPolicy *ReconnectPolicy
 }
 
 type ReconnectPolicy struct {
@@ -45,7 +45,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		if config.ReconnectPolicy.Retry {
 			log.Println("Failed to connect to server, retrying...")
 
-			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
+			c, res := reconnect(*config.ReconnectPolicy, address, processedConfig.TLSConfig)
 			if !res {
 				log.Println("reconnecting failed")
 
@@ -89,7 +89,7 @@ func processConfig(config *ClientConfig) ClientConfig {
 		return ClientConfig{
 			Token:     "",
 			TLSConfig: GetSimpleTLS(),
-			ReconnectPolicy: ReconnectPolicy{
+			ReconnectPolicy: &ReconnectPolicy{
 				Retry:         false,
 				RetryTimes:    reconnectRetryNumber,
 				RetryInterval: reconnectRetryInterval,
@@ -99,6 +99,14 @@ func processConfig(config *ClientConfig) ClientConfig {
 
 	if config.TLSConfig == nil {
 		config.TLSConfig = GetSimpleTLS()
+	}
+
+	if config.ReconnectPolicy == nil {
+		config.ReconnectPolicy = &ReconnectPolicy{
+			Retry:         false,
+			RetryTimes:    reconnectRetryNumber,
+			RetryInterval: reconnectRetryInterval,
+		}
 	}
 
 	return *config
