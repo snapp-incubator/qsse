@@ -28,16 +28,10 @@ var DefaultAuthenticationFunc = func(token string) bool { //nolint:gochecknoglob
 
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
-	if !topicHasWildcard(topic) {
-		if source, ok := s.EventSources[topic]; ok {
+	matchedTopics := findTopicsList(s.Topics, topic)
+	for _, matchedTopic := range matchedTopics {
+		if source, ok := s.EventSources[matchedTopic]; ok {
 			source.DataChannel <- event
-		}
-	} else {
-		matchedTopics := findTopicsList(s.Topics, topic)
-		for _, matchedTopic := range matchedTopics {
-			if source, ok := s.EventSources[matchedTopic]; ok {
-				source.DataChannel <- event
-			}
 		}
 	}
 }
