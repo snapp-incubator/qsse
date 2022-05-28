@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	pwc = '*' //placeholder wild character
+	pwc = '*' // placeholder wild character
 	sep = '.'
 )
 
-//TopicHasWildcard checks if the topic is a wildcard.
+// TopicHasWildcard checks if the topic is a wildcard.
 func TopicHasWildcard(topic string) bool {
 	for i, c := range topic {
 		if c == pwc {
@@ -20,10 +20,11 @@ func TopicHasWildcard(topic string) bool {
 			}
 		}
 	}
+
 	return false
 }
 
-//FindTopicsList find topics that match the topic pattern.
+// FindTopicsList find topics that match the topic pattern.
 func FindTopicsList(topics []string, pattern string) []string {
 	var matchedTopics []string
 
@@ -35,13 +36,14 @@ func FindTopicsList(topics []string, pattern string) []string {
 			log.Println("error in topic matching")
 		}
 	}
-	return matchedTopics
 
+	return matchedTopics
 }
 
-//FindRelatedWildcardTopics find topics patterns that are applicable to the given topic.
+// FindRelatedWildcardTopics find topics patterns that are applicable to the given topic.
 func FindRelatedWildcardTopics(topic string, topics []string) []string {
 	var matchedTopics []string
+
 	for _, pattern := range topics {
 		if TopicHasWildcard(pattern) {
 			ok, err := filepath.Match(pattern, topic)
@@ -52,5 +54,6 @@ func FindRelatedWildcardTopics(topic string, topics []string) []string {
 			}
 		}
 	}
+
 	return matchedTopics
 }

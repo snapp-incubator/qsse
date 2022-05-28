@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/lucas-clemente/quic-go" //nolint:typecheck
+	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 )
 
@@ -15,7 +15,7 @@ const DELIMITER = '\n'
 // Server is the main struct for the server.
 type Server struct {
 	Worker       Worker
-	Listener     quic.Listener //nolint:typecheck
+	Listener     quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
 
@@ -88,7 +88,8 @@ func (s *Server) handleClient(client *Subscriber) {
 	if !isValid {
 		log.Println("client is not authenticated")
 
-		err := client.connection.CloseWithError(quic.ApplicationErrorCode(CodeNotAuthorized), ErrNotAuthorized.Error()) //nolint:typecheck
+		code := quic.ApplicationErrorCode(CodeNotAuthorized)
+		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
 		checkError(err)
 
 		return
@@ -103,7 +104,7 @@ func (s *Server) handleClient(client *Subscriber) {
 }
 
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
-func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) { //nolint:typecheck
+func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
 	for _, topic := range client.Topics {
 		if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
 			log.Printf("client is not authorized for %s", topic)
@@ -130,7 +131,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{}) //nolint:typecheck
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}

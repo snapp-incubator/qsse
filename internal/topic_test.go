@@ -42,7 +42,6 @@ func TestTopicHasWildcard(t *testing.T) {
 			assert.Equal(t, testCase.hasWildcard, result)
 		})
 	}
-
 }
 
 func TestFindTopicsList(t *testing.T) {

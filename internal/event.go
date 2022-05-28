@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lucas-clemente/quic-go" //nolint:typecheck
+	"github.com/lucas-clemente/quic-go"
 )
 
 // EventSource is a struct for topic channel and its subscribers.
 type EventSource struct {
 	Topic       string
 	DataChannel chan []byte
-	Subscribers []quic.SendStream //nolint:typecheck
+	Subscribers []quic.SendStream
 }
 
 type Event struct {
@@ -19,7 +19,11 @@ type Event struct {
 	Data  []byte `json:"data,omitempty"`
 }
 
-func NewEventSource(topic string, dataChannel chan []byte, subscribers []quic.SendStream) *EventSource { //nolint:typecheck
+func NewEventSource(
+	topic string,
+	dataChannel chan []byte,
+	subscribers []quic.SendStream,
+) *EventSource {
 	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers}
 }
 
@@ -36,7 +40,7 @@ func (receiver *EventSource) TransferEvents(worker Worker) {
 }
 
 // WriteData writes data to stream.
-func WriteData(data any, sendStream quic.SendStream) error { //nolint:typecheck
+func WriteData(data any, sendStream quic.SendStream) error {
 	switch data := data.(type) {
 	case []byte:
 		if _, err := sendStream.Write(data); err != nil {

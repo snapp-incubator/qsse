@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/lucas-clemente/quic-go" //nolint:typecheck
+	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 )
 
@@ -40,7 +40,7 @@ type ReconnectPolicy struct {
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
 	processedConfig := processConfig(config)
 
-	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil) //nolint:typecheck
+	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if config.ReconnectPolicy.Retry {
 			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
@@ -102,9 +102,9 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
-func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) { //nolint:typecheck
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
-		connection, err := quic.DialAddr(address, tlcCfg, nil) //nolint:typecheck
+		connection, err := quic.DialAddr(address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
 		}

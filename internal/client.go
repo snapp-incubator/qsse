@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/lucas-clemente/quic-go" //nolint:typecheck
+	"github.com/lucas-clemente/quic-go"
 )
 
 type Client struct {
-	Connection quic.Connection //nolint:typecheck
+	Connection quic.Connection
 	Token      string
 	Topics     []string
 
