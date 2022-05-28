@@ -19,8 +19,15 @@ type Client interface {
 }
 
 type ClientConfig struct {
-	Token     string
-	TLSConfig *tls.Config
+	Token           string
+	TLSConfig       *tls.Config
+	ReconnectPolicy ReconnectPolicy
+}
+
+type ReconnectPolicy struct {
+	Retry         bool
+	RetryTimes    int
+	RetryInterval int
 }
 
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
