@@ -39,12 +39,12 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		if config.ReconnectPolicy.Retry {
 			c, res := reconnect(config.ReconnectPolicy, address, processedConfig.TLSConfig)
 			if !res {
-				return nil, err
+				return nil, err //nolint:wrapcheck
 			}
 
 			connection = c
 		} else {
-			return nil, err
+			return nil, err //nolint:wrapcheck
 		}
 	}
 
