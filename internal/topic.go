@@ -10,6 +10,7 @@ const (
 	sep = '.'
 )
 
+//topicHasWildcard checks if the topic is a wildcard.
 func topicHasWildcard(topic string) bool {
 	for i, c := range topic {
 		if c == pwc {
@@ -22,6 +23,7 @@ func topicHasWildcard(topic string) bool {
 	return false
 }
 
+//findTopicsList find topics that match the topic pattern.
 func findTopicsList(topics []string, pattern string) []string {
 	var matchedTopics []string
 
@@ -37,6 +39,7 @@ func findTopicsList(topics []string, pattern string) []string {
 
 }
 
+//findRelatedWildcardTopics find topics patterns that are applicable to the given topic.
 func findRelatedWildcardTopics(topic string, topics []string) []string {
 	var matchedTopics []string
 	for _, pattern := range topics {
