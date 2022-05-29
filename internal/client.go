@@ -54,7 +54,10 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
 			if len(topics) > 0 {
 				for _, topic := range topics {
-					c.OnEvent[topic](event.Data)
+					eventHandler, ok := c.OnEvent[topic]
+					if ok {
+						eventHandler(event.Data)
+					}
 				}
 			} else {
 				c.OnMessage(event.Topic, event.Data)
@@ -66,7 +69,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 // SetEventHandler sets the handler for the given topic.
 func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
 	if IsSubscribeTopicValid(topic, c.Topics) {
-		c.Topics = append(c.Topics, topic)
+		c.Topics = AppendIfMissing(c.Topics, topic)
 		c.OnEvent[topic] = handler
 	} else {
 		log.Printf("topic is not valid")
