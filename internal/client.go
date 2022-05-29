@@ -50,20 +50,27 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data)
 			c.OnError(err.Code, err.Data)
-		case c.OnEvent[event.Topic] != nil:
-			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
-			for _, topic := range topics {
-				c.OnEvent[topic](event.Data)
-			}
 		default:
-			c.OnMessage(event.Topic, event.Data)
+			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
+			if len(topics) > 0 {
+				for _, topic := range topics {
+					c.OnEvent[topic](event.Data)
+				}
+			} else {
+				c.OnMessage(event.Topic, event.Data)
+			}
 		}
 	}
 }
 
 // SetEventHandler sets the handler for the given topic.
 func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
-	c.OnEvent[topic] = handler
+	if IsSubscribeTopicValid(topic, c.Topics) {
+		c.Topics = append(c.Topics, topic)
+		c.OnEvent[topic] = handler
+	} else {
+		log.Printf("topic is not valid")
+	}
 }
 
 // SetErrorHandler sets the handler for "error" topic.
