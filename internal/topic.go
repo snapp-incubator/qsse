@@ -45,13 +45,11 @@ func FindRelatedWildcardTopics(topic string, topics []string) []string {
 	var matchedTopics []string
 
 	for _, pattern := range topics {
-		if TopicHasWildcard(pattern) {
-			ok, err := filepath.Match(pattern, topic)
-			if ok {
-				matchedTopics = append(matchedTopics, pattern)
-			} else if err != nil {
-				log.Println("error in topic matching")
-			}
+		ok, err := filepath.Match(pattern, topic)
+		if ok {
+			matchedTopics = append(matchedTopics, pattern)
+		} else if err != nil {
+			log.Println("error in topic matching")
 		}
 	}
 
@@ -68,4 +66,13 @@ func IsSubscribeTopicValid(topic string, topics []string) bool {
 	}
 
 	return false
+}
+
+func AppendIfMissing(topics []string, topic string) []string {
+	for _, ele := range topics {
+		if ele == topic {
+			return topics
+		}
+	}
+	return append(topics, topic)
 }
