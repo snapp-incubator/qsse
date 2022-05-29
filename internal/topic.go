@@ -70,8 +70,8 @@ func IsSubscribeTopicValid(topic string, topics []string) bool {
 
 // AppendIfMissing check if item missing append item to list.
 func AppendIfMissing(topics []string, topic string) []string {
-	for _, ele := range topics {
-		if ele == topic {
+	for _, item := range topics {
+		if item == topic {
 			return topics
 		}
 	}
