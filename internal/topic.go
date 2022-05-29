@@ -57,3 +57,14 @@ func FindRelatedWildcardTopics(topic string, topics []string) []string {
 
 	return matchedTopics
 }
+
+//IsSubscribeTopicValid check the subscribed topic exist or matched with client topics
+func IsSubscribeTopicValid(topic string, topics []string) bool {
+	for _, t := range topics {
+		ok, _ := filepath.Match(topic, t)
+		if ok {
+			return true
+		}
+	}
+	return false
+}
