@@ -66,5 +66,6 @@ func IsSubscribeTopicValid(topic string, topics []string) bool {
 			return true
 		}
 	}
+
 	return false
 }
