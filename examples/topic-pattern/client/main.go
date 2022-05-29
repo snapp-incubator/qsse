@@ -30,5 +30,9 @@ func main() {
 		log.Println("received on people.*.lastname")
 	})
 
+	client.SetEventHandler("people.*", func(bytes []byte) {
+		log.Println("received on people.*")
+	})
+
 	select {}
 }
