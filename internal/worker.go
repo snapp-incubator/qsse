@@ -34,7 +34,6 @@ func NewWorker() Worker {
 		eventSource := data.EventSource
 
 		for i, subscriber := range eventSource.Subscribers {
-			log.Println("Sending event to subscriber for topic:", topic)
 			event := NewEvent(topic, event)
 			err := WriteData(event, subscriber)
 			if err != nil {

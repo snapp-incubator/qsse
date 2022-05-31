@@ -52,7 +52,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 			c.OnError(err.Code, err.Data)
 		default:
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
-			log.Printf("topics %+v\n", topics)
+
 			if len(topics) > 0 {
 				for _, topic := range topics {
 					eventHandler, ok := c.OnEvent[topic]
