@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
 )
@@ -12,6 +13,7 @@ type EventSource struct {
 	Topic       string
 	DataChannel chan []byte
 	Subscribers []quic.SendStream
+	Metrics     Metrics
 }
 
 type Event struct {
@@ -23,8 +25,9 @@ func NewEventSource(
 	topic string,
 	dataChannel chan []byte,
 	subscribers []quic.SendStream,
+	metric Metrics,
 ) *EventSource {
-	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers}
+	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers, Metrics: metric}
 }
 
 func NewEvent(topic string, data []byte) *Event {
@@ -34,8 +37,10 @@ func NewEvent(topic string, data []byte) *Event {
 // TransferEvents distribute events from channel between subscribers.
 func (receiver *EventSource) TransferEvents(worker Worker) {
 	for event := range receiver.DataChannel {
+		start := time.Now()
 		work := NewSubscribeWork(event, receiver)
 		worker.SubscribePool.Process(work)
+		receiver.Metrics.AddResponseTime(time.Since(start).Seconds())
 	}
 }
 

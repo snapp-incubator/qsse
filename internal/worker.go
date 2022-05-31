@@ -36,6 +36,7 @@ func NewWorker() Worker {
 		for i, subscriber := range eventSource.Subscribers {
 			event := NewEvent(topic, event)
 			err := WriteData(event, subscriber)
+			eventSource.Metrics.IncSuccess()
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
 				eventSource.Subscribers = append(eventSource.Subscribers[:i], eventSource.Subscribers[i+1:]...)

@@ -21,6 +21,7 @@ type Server struct {
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
+	Metrics       Metrics
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
@@ -131,7 +132,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{}, s.Metrics)
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
