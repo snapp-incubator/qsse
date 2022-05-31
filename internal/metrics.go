@@ -23,37 +23,35 @@ func MetricHandler(port string) {
 func NewMetrics(namespace string, collection string, port string) Metrics {
 	go MetricHandler(port)
 
-	cm := Metrics{}
-
-	cm.ResponseTime = promauto.NewHistogram(
-		prometheus.HistogramOpts{ //nolint:exhaustivestruct
-			Namespace:   namespace,
-			Subsystem:   "qsse",
-			Name:        "event_response_time",
-			Help:        "event response time",
-			ConstLabels: prometheus.Labels{"collection": collection},
-		},
-	)
-
-	cm.SuccessCounter = promauto.NewCounter(
-		prometheus.CounterOpts{
-			Namespace:   namespace,
-			Subsystem:   "qsse",
-			Name:        "event_success_count",
-			Help:        "count total success in event operations",
-			ConstLabels: prometheus.Labels{"collection": collection},
-		},
-	)
-
-	cm.ErrorCounter = promauto.NewCounter(
-		prometheus.CounterOpts{
-			Namespace:   namespace,
-			Subsystem:   "qsse",
-			Name:        "event_error_count",
-			Help:        "count total errors in event operations",
-			ConstLabels: prometheus.Labels{"collection": collection},
-		},
-	)
+	cm := Metrics{
+		ResponseTime: promauto.NewHistogram(
+			prometheus.HistogramOpts{ //nolint:exhaustivestruct
+				Namespace:   namespace,
+				Subsystem:   "qsse",
+				Name:        "event_response_time",
+				Help:        "event response time",
+				ConstLabels: prometheus.Labels{"collection": collection},
+			},
+		),
+		SuccessCounter: promauto.NewCounter(
+			prometheus.CounterOpts{
+				Namespace:   namespace,
+				Subsystem:   "qsse",
+				Name:        "event_success_count",
+				Help:        "count total success in event operations",
+				ConstLabels: prometheus.Labels{"collection": collection},
+			},
+		),
+		ErrorCounter: promauto.NewCounter(
+			prometheus.CounterOpts{
+				Namespace:   namespace,
+				Subsystem:   "qsse",
+				Name:        "event_error_count",
+				Help:        "count total errors in event operations",
+				ConstLabels: prometheus.Labels{"collection": collection},
+			},
+		),
+	}
 
 	return cm
 }
