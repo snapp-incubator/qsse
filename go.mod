@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/Jeffail/tunny v0.1.4
 	github.com/go-errors/errors v1.4.2
-	github.com/lucas-clemente/quic-go v0.27.0
-	github.com/stretchr/testify v1.5.1
+	github.com/lucas-clemente/quic-go v0.27.1
+	github.com/stretchr/testify v1.7.1
 )
 
 require (
@@ -27,5 +27,5 @@ require (
 	golang.org/x/tools v0.1.1 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
