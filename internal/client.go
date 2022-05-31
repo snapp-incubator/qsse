@@ -50,6 +50,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		switch {
 		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data)
+
 			c.Metrics.IncErr()
 			c.OnError(err.Code, err.Data)
 		default:
@@ -69,7 +70,6 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 			} else {
 				c.OnMessage(event.Topic, event.Data)
 				c.Metrics.IncSuccess()
-
 			}
 		}
 	}

@@ -57,6 +57,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 			return nil, err //nolint:wrapcheck
 		}
 	}
+
 	metric := internal.NewMetrics("client", "for_tets_client", "4243")
 
 	client := internal.Client{

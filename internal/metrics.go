@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,12 +17,14 @@ type Metrics struct {
 
 func MetricHandler(port string) {
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":"+port, nil)
+	log.Println(http.ListenAndServe(":"+port, nil))
 }
 
 func NewMetrics(namespace string, collection string, port string) Metrics {
 	go MetricHandler(port)
-	var cm Metrics
+
+	cm := Metrics{}
+
 	cm.ResponseTime = promauto.NewHistogram(
 		prometheus.HistogramOpts{ //nolint:exhaustivestruct
 			Namespace:   namespace,

@@ -25,6 +25,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
+
 	metric := internal.NewMetrics("qss_metrics", "this_is_for_test", "4242")
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
