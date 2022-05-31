@@ -28,6 +28,7 @@ func NewMetrics(namespace string, collection string, port string) Metrics {
 			prometheus.HistogramOpts{ //nolint:exhaustivestruct
 				Namespace:   namespace,
 				Subsystem:   "qsse",
+				Buckets:     nil,
 				Name:        "event_response_time",
 				Help:        "event response time",
 				ConstLabels: prometheus.Labels{"collection": collection},
