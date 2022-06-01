@@ -30,11 +30,11 @@ func NewWorker() Worker {
 		}
 
 		topic := data.EventSource.Topic
-		event := data.Event
+		eventData := data.Event
 		eventSource := data.EventSource
+		event := NewEvent(topic, eventData)
 
 		for i, subscriber := range eventSource.Subscribers {
-			event := NewEvent(topic, event)
 			err := WriteData(event, subscriber)
 			eventSource.Metrics.IncSuccess()
 			if err != nil {
