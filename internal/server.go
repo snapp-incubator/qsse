@@ -38,7 +38,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 func (s *Server) Publish(topic string, event []byte) {
 	matchedTopics := FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
-		if source, ok := s.EventSources[matchedTopic]; ok {
+		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
 			source.DataChannel <- event
 		}
 	}
