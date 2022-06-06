@@ -10,7 +10,7 @@
 </a>&nbsp;
 <img src="https://img.shields.io/badge/license-apache_2.0-red?style=for-the-badge&logo=none" alt="license" />
 
-<img src="https://img.shields.io/badge/Version-1.1.5-informational?style=for-the-badge&logo=none" alt="version" />
+<img src="https://img.shields.io/badge/Version-1.1.6-informational?style=for-the-badge&logo=none" alt="version" />
 </p>
 
 
