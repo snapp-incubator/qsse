@@ -58,8 +58,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		}
 	}
 
-	metric := internal.NewMetrics("client", "for_tets_client", "4243")
-
 	client := internal.Client{
 		Connection: connection,
 		Token:      processedConfig.Token,
@@ -67,7 +65,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		OnEvent:    make(map[string]func([]byte)),
 		OnMessage:  internal.DefaultOnMessage,
 		OnError:    internal.DefaultOnError,
-		Metrics:    metric,
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)

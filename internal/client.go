@@ -16,7 +16,6 @@ type Client struct {
 	OnEvent   map[string]func(event []byte)
 	OnMessage func(topic string, message []byte)
 	OnError   func(code int, data map[string]any)
-	Metrics   Metrics
 }
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
@@ -51,7 +50,6 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data)
 
-			c.Metrics.IncErr()
 			c.OnError(err.Code, err.Data)
 		default:
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
@@ -61,15 +59,12 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 					eventHandler, ok := c.OnEvent[topic]
 					if ok {
 						eventHandler(event.Data)
-						c.Metrics.IncSuccess()
 					} else {
 						c.OnMessage(topic, event.Data)
-						c.Metrics.IncSuccess()
 					}
 				}
 			} else {
 				c.OnMessage(event.Topic, event.Data)
-				c.Metrics.IncSuccess()
 			}
 		}
 	}

@@ -40,7 +40,6 @@ func NewWorker() Worker {
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
 			} else {
-				eventSource.Metrics.IncSuccess()
 				eventSource.Subscribers[i] = subscriber
 				i++
 			}
