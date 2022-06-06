@@ -42,10 +42,10 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
-		if config.ReconnectPolicy.Retry {
+		if processedConfig.ReconnectPolicy.Retry {
 			log.Println("Failed to connect to server, retrying...")
 
-			c, res := reconnect(*config.ReconnectPolicy, address, processedConfig.TLSConfig)
+			c, res := reconnect(*processedConfig.ReconnectPolicy, address, processedConfig.TLSConfig)
 			if !res {
 				log.Println("reconnecting failed")
 
