@@ -21,6 +21,7 @@ type Server struct {
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
+	Metrics       Metrics
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
@@ -35,9 +36,11 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
+	s.Metrics.IncPublishEvent(topic)
 	matchedTopics := FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
+			s.Metrics.IncEvent(topic)
 			source.DataChannel <- event
 		}
 	}
@@ -114,6 +117,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 
 		if _, ok := s.EventSources[topic]; ok {
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
+			s.Metrics.IncSubscriber(topic)
 		} else {
 			e := NewErr(CodeTopicNotAvailable, map[string]any{
 				"topic": topic,
@@ -131,7 +135,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{}, s.Metrics)
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}

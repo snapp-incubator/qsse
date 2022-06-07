@@ -9,6 +9,11 @@ import (
 	"github.com/snapp-incubator/qsse/internal"
 )
 
+type ServerConfig struct {
+	NameSpace string
+	Port      string
+}
+
 type Server interface {
 	Publish(topic string, event []byte)
 
@@ -20,12 +25,12 @@ type Server interface {
 }
 
 // NewServer creates a new server and listen for connections on the given address.
-func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, error) {
+func NewServer(address string, tlsConfig *tls.Config, topics []string, config *ServerConfig) (Server, error) {
 	listener, err := quic.ListenAddr(address, tlsConfig, nil)
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
-
+	metric := internal.NewMetrics(config.NameSpace, config.Port)
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
 		Listener:      listener,
@@ -33,6 +38,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
+		Metrics:       metric,
 	}
 
 	server.GenerateEventSources(topics)
