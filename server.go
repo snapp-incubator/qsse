@@ -10,7 +10,8 @@ import (
 )
 
 type ServerConfig struct {
-	Metric *MetricConfig
+	Metric    *MetricConfig
+	TLSConfig *tls.Config
 }
 
 type MetricConfig struct {
@@ -30,10 +31,10 @@ type Server interface {
 }
 
 // NewServer creates a new server and listen for connections on the given address.
-func NewServer(address string, tlsConfig *tls.Config, topics []string, config *ServerConfig) (Server, error) {
+func NewServer(address string, topics []string, config *ServerConfig) (Server, error) {
 	config = processServerConfig(config)
 
-	listener, err := quic.ListenAddr(address, tlsConfig, nil)
+	listener, err := quic.ListenAddr(address, config.TLSConfig, nil)
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
@@ -64,6 +65,7 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 				NameSpace: "qsse",
 				Port:      "8081",
 			},
+			TLSConfig: GetDefaultTLSConfig(),
 		}
 	}
 
@@ -73,6 +75,10 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 			NameSpace: "qsse",
 			Port:      "8081",
 		}
+	}
+
+	if cfg.TLSConfig == nil {
+		cfg.TLSConfig = GetDefaultTLSConfig()
 	}
 
 	return cfg
