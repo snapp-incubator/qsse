@@ -106,7 +106,11 @@ func (s *Server) handleClient(client *Subscriber) {
 	log.Println("client is authenticated")
 
 	sendStream, err := client.connection.OpenUniStream()
-	checkError(err)
+	if err != nil {
+		log.Printf("failed to open send stream to client: %+v\n", err)
+
+		return
+	}
 
 	s.addClientTopicsToEventSources(client, sendStream)
 }
