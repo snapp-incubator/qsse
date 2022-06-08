@@ -12,8 +12,8 @@ import (
 type Metrics struct {
 	EventCounter      *prometheus.GaugeVec
 	SubscriberCounter *prometheus.GaugeVec
-	PublishCounter    *prometheus.CounterVec
-	DistributeCounter *prometheus.CounterVec
+	PublishCounter    prometheus.Counter
+	DistributeCounter prometheus.Counter
 }
 
 func MetricHandler(port string) {
@@ -42,19 +42,19 @@ func NewMetrics(enabled bool, namespace string, port string) Metrics {
 		Help:      "count of topic's subscribers",
 	}, []string{"topic"})
 
-	metric.PublishCounter = promauto.NewCounterVec(prometheus.CounterOpts{ //nolint:exhaustruct
+	metric.PublishCounter = promauto.NewCounter(prometheus.CounterOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
 		Name:      "event_publish_total",
 		Help:      "count total success published events",
-	}, []string{"topic"})
+	})
 
-	metric.DistributeCounter = promauto.NewCounterVec(prometheus.CounterOpts{ //nolint:exhaustruct
+	metric.DistributeCounter = promauto.NewCounter(prometheus.CounterOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
 		Name:      "event_distribute_total",
 		Help:      "count total success distributed events",
-	}, []string{"topic"})
+	})
 
 	return metric
 }
@@ -83,14 +83,10 @@ func (m Metrics) DecSubscriber(topic string) {
 	}).Dec()
 }
 
-func (m Metrics) IncPublishEvent(topic string) {
-	m.PublishCounter.With(map[string]string{
-		"topic": topic,
-	}).Inc()
+func (m Metrics) IncPublishEvent() {
+	m.PublishCounter.Inc()
 }
 
-func (m Metrics) IncDistributeEvent(topic string) {
-	m.DistributeCounter.With(map[string]string{
-		"topic": topic,
-	}).Inc()
+func (m Metrics) IncDistributeEvent() {
+	m.DistributeCounter.Inc()
 }
