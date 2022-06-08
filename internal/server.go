@@ -41,7 +41,7 @@ func (s *Server) Publish(topic string, event []byte) {
 	matchedTopics := FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
-			s.Metrics.IncEvent(topic)
+			s.Metrics.IncEvent(matchedTopic)
 			source.DataChannel <- event
 		}
 	}
