@@ -9,6 +9,17 @@ import (
 	"github.com/snapp-incubator/qsse/internal"
 )
 
+type ServerConfig struct {
+	Metric    *MetricConfig
+	TLSConfig *tls.Config
+}
+
+type MetricConfig struct {
+	Enabled   bool
+	NameSpace string
+	Port      string
+}
+
 type Server interface {
 	Publish(topic string, event []byte)
 
@@ -20,12 +31,15 @@ type Server interface {
 }
 
 // NewServer creates a new server and listen for connections on the given address.
-func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, error) {
-	listener, err := quic.ListenAddr(address, tlsConfig, nil)
+func NewServer(address string, topics []string, config *ServerConfig) (Server, error) {
+	config = processServerConfig(config)
+
+	listener, err := quic.ListenAddr(address, config.TLSConfig, nil)
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
+	metric := internal.NewMetrics(config.Metric.Enabled, config.Metric.NameSpace, config.Metric.Port)
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
 		Listener:      listener,
@@ -33,6 +47,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
+		Metrics:       metric,
 	}
 
 	server.GenerateEventSources(topics)
@@ -40,4 +55,31 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 	go server.AcceptClients()
 
 	return &server, nil
+}
+
+func processServerConfig(cfg *ServerConfig) *ServerConfig {
+	if cfg == nil {
+		return &ServerConfig{
+			Metric: &MetricConfig{
+				Enabled:   false,
+				NameSpace: "qsse",
+				Port:      "8081",
+			},
+			TLSConfig: GetDefaultTLSConfig(),
+		}
+	}
+
+	if cfg.Metric == nil {
+		cfg.Metric = &MetricConfig{
+			Enabled:   false,
+			NameSpace: "qsse",
+			Port:      "8081",
+		}
+	}
+
+	if cfg.TLSConfig == nil {
+		cfg.TLSConfig = GetDefaultTLSConfig()
+	}
+
+	return cfg
 }
