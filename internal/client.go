@@ -44,6 +44,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		var event Event
 		if err = json.Unmarshal(bytes, &event); err != nil {
 			log.Printf("failed to unmarshal event: %+v\n", err)
+
 			continue
 		}
 
