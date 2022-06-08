@@ -91,11 +91,14 @@ func (s *Server) AcceptClients() {
 func (s *Server) handleClient(client *Subscriber) {
 	isValid := s.Authenticator.Authenticate(client.Token)
 	if !isValid {
-		log.Println("client is not authenticated")
+		log.Println("client is not valid")
 
 		code := quic.ApplicationErrorCode(CodeNotAuthorized)
+
 		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
-		checkError(err)
+		if err != nil {
+			log.Printf("failed to close connection with client: %+v\n", err)
+		}
 
 		return
 	}
