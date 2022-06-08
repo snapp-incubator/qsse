@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"github.com/pkg/errors"
 	"github.com/snapp-incubator/qsse/internal"
 )
 
@@ -37,6 +38,7 @@ type ReconnectPolicy struct {
 	RetryInterval int // duration between retry intervals in milliseconds
 }
 
+//nolint:funlen
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
 	processedConfig := processConfig(config)
 
@@ -68,15 +70,39 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
-	bytes, _ := json.Marshal(offer) //nolint:errchkjson
 
-	stream, _ := connection.OpenUniStream()
+	bytes, err := json.Marshal(offer)
+	if err != nil {
+		log.Printf("failed to marshal offer: %+v\n", err)
 
-	_ = internal.WriteData(bytes, stream)
+		return nil, errors.Wrap(err, "failed to marshal offer")
+	}
+
+	stream, err := connection.OpenUniStream()
+	if err != nil {
+		log.Printf("failed to open send stream: %+v\n", err)
+		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
+
+		return nil, errors.Wrap(err, internal.ErrFailedToCreateStream.Error())
+	}
+
+	err = internal.WriteData(bytes, stream)
+	if err != nil {
+		log.Printf("failed to send offer to server: %+v\n", err)
+		internal.CloseClientConnection(connection, internal.CodeFailedToSendOffer, internal.ErrFailedToSendOffer)
+
+		return nil, errors.Wrap(err, internal.ErrFailedToSendOffer.Error())
+	}
 
 	_ = stream.Close()
 
-	receiveStream, _ := connection.AcceptUniStream(context.Background())
+	receiveStream, err := connection.AcceptUniStream(context.Background())
+	if err != nil {
+		log.Printf("failed to open receive stream: %+v\n", err)
+		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
+
+		return nil, errors.Wrap(err, internal.ErrFailedToCreateStream.Error())
+	}
 
 	reader := bufio.NewReader(receiveStream)
 	go client.AcceptEvents(reader)
