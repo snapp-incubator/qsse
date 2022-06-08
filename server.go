@@ -30,6 +30,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string, config *S
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
+
 	metric := internal.NewMetrics(config.NameSpace, config.Port)
 	server := internal.Server{
 		Worker:        internal.NewWorker(),

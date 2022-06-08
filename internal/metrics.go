@@ -22,23 +22,24 @@ func MetricHandler(port string) {
 
 func NewMetrics(namespace string, port string) Metrics {
 	var metric Metrics
+
 	go MetricHandler(port)
 
-	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
 		Name:      "event_source_load",
 		Help:      "count of events in eventsource",
 	}, []string{"subject"})
 
-	metric.SubscribeCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	metric.SubscribeCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
 		Name:      "subscribers_count",
 		Help:      "count total subscribe in operations",
 	}, []string{"subject"})
 
-	metric.PublishCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+	metric.PublishCounter = promauto.NewCounterVec(prometheus.CounterOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
 		Name:      "publish_count",

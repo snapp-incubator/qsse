@@ -37,6 +37,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
 	s.Metrics.IncPublishEvent(topic)
+
 	matchedTopics := FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
