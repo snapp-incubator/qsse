@@ -10,9 +10,10 @@ import (
 )
 
 type Metrics struct {
-	EventCounter     *prometheus.GaugeVec
-	SubscribeCounter *prometheus.GaugeVec
-	PublishCounter   *prometheus.CounterVec
+	EventCounter      *prometheus.GaugeVec
+	SubscriberCounter *prometheus.GaugeVec
+	PublishCounter    *prometheus.CounterVec
+	DistributeCounter *prometheus.CounterVec
 }
 
 func MetricHandler(port string) {
@@ -30,53 +31,66 @@ func NewMetrics(enabled bool, namespace string, port string) Metrics {
 	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
-		Name:      "event_source_load",
+		Name:      "topic_event_count",
 		Help:      "count of events in eventsource",
-	}, []string{"subject"})
+	}, []string{"topic"})
 
-	metric.SubscribeCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
+	metric.SubscriberCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
-		Name:      "subscribers_count",
-		Help:      "count total subscribe in operations",
-	}, []string{"subject"})
+		Name:      "topic_subscriber_count",
+		Help:      "count of topic's subscribers",
+	}, []string{"topic"})
 
 	metric.PublishCounter = promauto.NewCounterVec(prometheus.CounterOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
-		Name:      "publish_count",
-		Help:      "count total success publish in event operations",
-	}, []string{"subject"})
+		Name:      "event_publish_total",
+		Help:      "count total success published events",
+	}, []string{"topic"})
+
+	metric.DistributeCounter = promauto.NewCounterVec(prometheus.CounterOpts{ //nolint:exhaustruct
+		Namespace: namespace,
+		Subsystem: "qsse",
+		Name:      "event_distribute_total",
+		Help:      "count total success distributed events",
+	}, []string{"topic"})
 
 	return metric
 }
 
-func (n Metrics) IncEvent(subject string) {
-	n.EventCounter.With(map[string]string{
-		"subject": subject,
+func (m Metrics) IncEvent(topic string) {
+	m.EventCounter.With(map[string]string{
+		"topic": topic,
 	}).Inc()
 }
 
-func (n Metrics) DescEvent(subject string) {
-	n.EventCounter.With(map[string]string{
-		"subject": subject,
+func (m Metrics) DecEvent(topic string) {
+	m.EventCounter.With(map[string]string{
+		"topic": topic,
 	}).Dec()
 }
 
-func (n Metrics) IncSubscriber(subject string) {
-	n.SubscribeCounter.With(map[string]string{
-		"subject": subject,
+func (m Metrics) IncSubscriber(topic string) {
+	m.SubscriberCounter.With(map[string]string{
+		"topic": topic,
 	}).Inc()
 }
 
-func (n Metrics) DescSubscriber(subject string) {
-	n.SubscribeCounter.With(map[string]string{
-		"subject": subject,
+func (m Metrics) DecSubscriber(topic string) {
+	m.SubscriberCounter.With(map[string]string{
+		"topic": topic,
 	}).Dec()
 }
 
-func (n Metrics) IncPublishEvent(subject string) {
-	n.PublishCounter.With(map[string]string{
-		"subject": subject,
+func (m Metrics) IncPublishEvent(topic string) {
+	m.PublishCounter.With(map[string]string{
+		"topic": topic,
+	}).Inc()
+}
+
+func (m Metrics) IncDistributeEvent(topic string) {
+	m.DistributeCounter.With(map[string]string{
+		"topic": topic,
 	}).Inc()
 }
