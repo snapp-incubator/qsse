@@ -72,8 +72,13 @@ func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 func (s *Server) AcceptClients() {
 	for {
 		background := context.Background()
+
 		connection, err := s.Listener.Accept(background)
-		checkError(err)
+		if err != nil {
+			log.Printf("failed to accept new client: %+v\n", err)
+
+			continue
+		}
 		log.Println("found a new client")
 
 		client := NewSubscriber(connection)
