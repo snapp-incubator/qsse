@@ -38,7 +38,7 @@ func NewSubscriber(connection quic.Connection) (*Subscriber, error) {
 
 	var offer Offer
 	if err := json.Unmarshal(bytes, &offer); err != nil {
-		return nil, ErrFailedToUnmarshal
+		return nil, ErrFailedToMarshal
 	}
 
 	return &Subscriber{

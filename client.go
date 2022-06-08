@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
-	"github.com/pkg/errors"
 	"github.com/snapp-incubator/qsse/internal"
 )
 
@@ -75,7 +74,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	if err != nil {
 		log.Printf("failed to marshal offer: %+v\n", err)
 
-		return nil, errors.Wrap(err, "failed to marshal offer")
+		return nil, internal.ErrFailedToMarshal
 	}
 
 	stream, err := connection.OpenUniStream()
@@ -83,7 +82,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		log.Printf("failed to open send stream: %+v\n", err)
 		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
 
-		return nil, errors.Wrap(err, internal.ErrFailedToCreateStream.Error())
+		return nil, internal.ErrFailedToCreateStream
 	}
 
 	err = internal.WriteData(bytes, stream)
@@ -91,7 +90,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		log.Printf("failed to send offer to server: %+v\n", err)
 		internal.CloseClientConnection(connection, internal.CodeFailedToSendOffer, internal.ErrFailedToSendOffer)
 
-		return nil, errors.Wrap(err, internal.ErrFailedToSendOffer.Error())
+		return nil, internal.ErrFailedToSendOffer
 	}
 
 	_ = stream.Close()
@@ -101,7 +100,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		log.Printf("failed to open receive stream: %+v\n", err)
 		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
 
-		return nil, errors.Wrap(err, internal.ErrFailedToCreateStream.Error())
+		return nil, internal.ErrFailedToCreateStream
 	}
 
 	reader := bufio.NewReader(receiveStream)

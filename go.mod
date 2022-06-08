@@ -6,7 +6,6 @@ require (
 	github.com/Jeffail/tunny v0.1.4
 	github.com/go-errors/errors v1.4.2
 	github.com/lucas-clemente/quic-go v0.27.1
-	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/stretchr/testify v1.7.2
 )
