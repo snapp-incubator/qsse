@@ -34,6 +34,8 @@ func NewWorker() Worker {
 		eventSource := data.EventSource
 		event := NewEvent(topic, eventData)
 
+		eventSource.Metrics.IncDistributeEvent()
+
 		i := 0
 		for _, subscriber := range eventSource.Subscribers {
 			err := WriteData(event, subscriber)
