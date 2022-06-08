@@ -118,22 +118,30 @@ func (s *Server) handleClient(client *Subscriber) {
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
 func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
 	for _, topic := range client.Topics {
-		if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
-			log.Printf("client is not authorized for %s", topic)
-
-			continue
-		}
-
 		if _, ok := s.EventSources[topic]; ok {
+			if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
+				log.Printf("client is not authorized for topic: %s", topic)
+
+				err := SendError(sendStream, CodeNotAuthorized, map[string]any{"topic": topic})
+				if err != nil {
+					log.Printf("failed to send error to client: %+v\n", err)
+
+					break
+				}
+
+				continue
+			}
+
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
 		} else {
-			e := NewErr(CodeTopicNotAvailable, map[string]any{
-				"topic": topic,
-			})
-			errBytes, _ := json.Marshal(e) //nolint:errchkjson
-			errEvent := NewEvent(ErrorTopic, errBytes)
-			err := WriteData(errEvent, sendStream)
-			checkError(err)
+			log.Printf("topic doesn't exists: %s\n", topic)
+
+			err := SendError(sendStream, CodeTopicNotAvailable, map[string]any{"topic": topic})
+			if err != nil {
+				log.Printf("failed to send error to client: %+v\n", err)
+
+				break
+			}
 		}
 	}
 }
@@ -148,6 +156,16 @@ func (s *Server) GenerateEventSources(topics []string) {
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
 	}
+}
+
+// SendError send input error to client.
+func SendError(sendStream quic.SendStream, code int, data map[string]any) error {
+	e := NewErr(code, data)
+
+	errBytes, _ := json.Marshal(e) //nolint:errchkjson
+	errEvent := NewEvent(ErrorTopic, errBytes)
+
+	return WriteData(errEvent, sendStream)
 }
 
 func checkError(err error) {
