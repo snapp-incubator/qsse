@@ -23,10 +23,6 @@ var lastNames = []string{
 }
 
 func main() {
-	config := &qsse.ServerConfig{
-		NameSpace: "qsse_test",
-		Port:      "5005",
-	}
 	authenticateFunc := func(token string) bool {
 		log.Printf("Authenticating token: %s", token)
 
@@ -35,7 +31,7 @@ func main() {
 
 	topics := []string{"firstnames", "lastnames"}
 
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics, config)
+	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics, nil)
 	if err != nil {
 		panic(err)
 	}
