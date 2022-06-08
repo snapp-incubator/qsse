@@ -79,9 +79,18 @@ func (s *Server) AcceptClients() {
 
 			continue
 		}
+
 		log.Println("found a new client")
 
-		client := NewSubscriber(connection)
+		var client *Subscriber
+
+		client, err = NewSubscriber(connection)
+		if err != nil {
+			log.Printf("failed to handle new subscriber: %+v\n", err)
+
+			continue
+		}
+
 		go s.handleClient(client)
 	}
 }
@@ -93,12 +102,7 @@ func (s *Server) handleClient(client *Subscriber) {
 	if !isValid {
 		log.Println("client is not valid")
 
-		code := quic.ApplicationErrorCode(CodeNotAuthorized)
-
-		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
-		if err != nil {
-			log.Printf("failed to close connection with client: %+v\n", err)
-		}
+		CloseClientConnection(client.connection, CodeNotAuthorized, ErrNotAuthorized)
 
 		return
 	}
@@ -108,6 +112,7 @@ func (s *Server) handleClient(client *Subscriber) {
 	sendStream, err := client.connection.OpenUniStream()
 	if err != nil {
 		log.Printf("failed to open send stream to client: %+v\n", err)
+		CloseClientConnection(client.connection, CodeUnknown, err)
 
 		return
 	}
@@ -168,8 +173,10 @@ func SendError(sendStream quic.SendStream, code int, data map[string]any) error 
 	return WriteData(errEvent, sendStream)
 }
 
-func checkError(err error) {
-	if err != nil {
-		log.Println(err.Error())
+func CloseClientConnection(connection quic.Connection, code int, err error) {
+	appCode := quic.ApplicationErrorCode(code)
+
+	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
+		log.Printf("failed to close connection with client: %+v\n", err)
 	}
 }

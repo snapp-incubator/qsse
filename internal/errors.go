@@ -13,7 +13,12 @@ type Error struct {
 
 const ErrorTopic = "error"
 
-var ErrNotAuthorized = errors.New("not authorized")
+var (
+	ErrNotAuthorized        = errors.New("not authorized")
+	ErrFailedToCreateStream = errors.New("failed to create send/receive stream to client")
+	ErrFailedToReadOffer    = errors.New("failed to read offer from client")
+	ErrFailedToUnmarshal    = errors.New("failed to unmarshal data")
+)
 
 const (
 	CodeNotAuthorized = iota + 1
