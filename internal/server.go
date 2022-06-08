@@ -123,32 +123,38 @@ func (s *Server) handleClient(client *Subscriber) {
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
 func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
 	for _, topic := range client.Topics {
-		if _, ok := s.EventSources[topic]; ok {
-			if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
-				log.Printf("client is not authorized for topic: %s", topic)
+		valid, err := s.isTopicValid(client, sendStream, topic)
+		if err != nil {
+			log.Printf("failed to send error to client: %+v\n", err)
 
-				err := SendError(sendStream, CodeNotAuthorized, map[string]any{"topic": topic})
-				if err != nil {
-					log.Printf("failed to send error to client: %+v\n", err)
+			break
+		}
 
-					break
-				}
-
-				continue
-			}
-
+		if valid {
 			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
-		} else {
-			log.Printf("topic doesn't exists: %s\n", topic)
-
-			err := SendError(sendStream, CodeTopicNotAvailable, map[string]any{"topic": topic})
-			if err != nil {
-				log.Printf("failed to send error to client: %+v\n", err)
-
-				break
-			}
 		}
 	}
+}
+
+// isTopicValid check whether topic exists and client is authorized on it or not.
+func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, topic string) (bool, error) {
+	if _, ok := s.EventSources[topic]; !ok {
+		log.Printf("topic doesn't exists: %s\n", topic)
+
+		err := SendError(sendStream, NewErr(CodeTopicNotAvailable, map[string]any{"topic": topic}))
+
+		return false, err
+	}
+
+	if !s.Authorizer.Authorize(client.Token, topic) {
+		log.Printf("client is not authorized for topic: %s", topic)
+
+		err := SendError(sendStream, NewErr(CodeNotAuthorized, map[string]any{"topic": topic}))
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 // GenerateEventSources generates eventSources for each topic.
@@ -164,9 +170,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 }
 
 // SendError send input error to client.
-func SendError(sendStream quic.SendStream, code int, data map[string]any) error {
-	e := NewErr(code, data)
-
+func SendError(sendStream quic.SendStream, e *Error) error {
 	errBytes, _ := json.Marshal(e) //nolint:errchkjson
 	errEvent := NewEvent(ErrorTopic, errBytes)
 
