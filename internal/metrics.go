@@ -20,10 +20,12 @@ func MetricHandler(port string) {
 	log.Println(http.ListenAndServe(":"+port, nil))
 }
 
-func NewMetrics(namespace string, port string) Metrics {
+func NewMetrics(enabled bool, namespace string, port string) Metrics {
 	var metric Metrics
 
-	go MetricHandler(port)
+	if enabled {
+		go MetricHandler(port)
+	}
 
 	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
