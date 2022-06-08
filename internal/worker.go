@@ -34,11 +34,15 @@ func NewWorker() Worker {
 		eventSource := data.EventSource
 		event := NewEvent(topic, eventData)
 
+		eventSource.Metrics.IncDistributeEvent()
+
 		i := 0
 		for _, subscriber := range eventSource.Subscribers {
 			err := WriteData(event, subscriber)
+			eventSource.Metrics.DecEvent(topic)
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
+				eventSource.Metrics.DecSubscriber(topic)
 			} else {
 				eventSource.Subscribers[i] = subscriber
 				i++
