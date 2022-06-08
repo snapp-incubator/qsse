@@ -10,6 +10,11 @@ import (
 )
 
 type ServerConfig struct {
+	Metric MetricConfig
+}
+
+type MetricConfig struct {
+	Enabled   bool
 	NameSpace string
 	Port      string
 }
@@ -31,7 +36,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string, config *S
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
-	metric := internal.NewMetrics(config.NameSpace, config.Port)
+	metric := internal.NewMetrics(config.Metric.Enabled, config.Metric.NameSpace, config.Metric.Port)
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
 		Listener:      listener,
