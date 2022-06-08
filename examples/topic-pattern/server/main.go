@@ -27,7 +27,7 @@ func main() {
 
 	topics := []string{"people.1.firstname", "people.2.firstname", "people.1.lastname", "people.2.lastname"}
 
-	server, err := qsse.NewServer("localhost:4242", topics, &qsse.ServerConfig{Metric: &qsse.MetricConfig{Enabled: true, Port: "8080", NameSpace: "asd"}})
+	server, err := qsse.NewServer("localhost:4242", topics, nil)
 	if err != nil {
 		panic(err)
 	}
