@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"go.uber.org/zap"
 
 	"github.com/lucas-clemente/quic-go"
 )
@@ -23,17 +24,17 @@ func NewOffer(token string, topics []string) Offer {
 	return Offer{Token: token, Topics: topics}
 }
 
-func NewSubscriber(connection quic.Connection) *Subscriber {
+func NewSubscriber(connection quic.Connection, logger *zap.Logger) *Subscriber {
 	stream, err := connection.AcceptUniStream(context.Background())
-	checkError(err)
+	checkError(err, logger)
 
 	reader := bufio.NewReader(stream)
 	bytes, err := reader.ReadBytes(DELIMITER)
-	checkError(err)
+	checkError(err, logger)
 
 	var offer Offer
 	err = json.Unmarshal(bytes, &offer)
-	checkError(err)
+	checkError(err, logger)
 
 	return &Subscriber{
 		connection: connection,

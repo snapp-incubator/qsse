@@ -3,10 +3,9 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"log"
-
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
+	"go.uber.org/zap"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -18,6 +17,7 @@ type Server struct {
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
+	Logger       *zap.Logger
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
@@ -35,7 +35,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
-	matchedTopics := FindTopicsList(s.Topics, topic)
+	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger)
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok {
 			source.DataChannel <- event
@@ -73,10 +73,11 @@ func (s *Server) AcceptClients() {
 	for {
 		background := context.Background()
 		connection, err := s.Listener.Accept(background)
-		checkError(err)
-		log.Println("found a new client")
+		checkError(err, s.Logger)
 
-		client := NewSubscriber(connection)
+		s.Logger.Info("found a new client")
+
+		client := NewSubscriber(connection, s.Logger)
 		go s.handleClient(client)
 	}
 }
@@ -86,19 +87,19 @@ func (s *Server) AcceptClients() {
 func (s *Server) handleClient(client *Subscriber) {
 	isValid := s.Authenticator.Authenticate(client.Token)
 	if !isValid {
-		log.Println("client is not authenticated")
+		s.Logger.Warn("client is not authenticated")
 
 		code := quic.ApplicationErrorCode(CodeNotAuthorized)
 		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
-		checkError(err)
+		checkError(err, s.Logger)
 
 		return
 	}
 
-	log.Println("client is authenticated")
+	s.Logger.Info("client is authenticated")
 
 	sendStream, err := client.connection.OpenUniStream()
-	checkError(err)
+	checkError(err, s.Logger)
 
 	s.addClientTopicsToEventSources(client, sendStream)
 }
@@ -107,7 +108,7 @@ func (s *Server) handleClient(client *Subscriber) {
 func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
 	for _, topic := range client.Topics {
 		if ok := s.Authorizer.Authorize(client.Token, topic); !ok {
-			log.Printf("client is not authorized for %s", topic)
+			s.Logger.Warn("client is not authorized for %s", zap.String("topic", topic))
 
 			continue
 		}
@@ -121,7 +122,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 			errBytes, _ := json.Marshal(e) //nolint:errchkjson
 			errEvent := NewEvent(ErrorTopic, errBytes)
 			err := WriteData(errEvent, sendStream)
-			checkError(err)
+			checkError(err, s.Logger)
 		}
 	}
 }
@@ -130,7 +131,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
-			log.Printf("creating new event source for topic %s", topic)
+			s.Logger.Info("creating new event source for topic", zap.String("topic", topic))
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{})
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
@@ -138,8 +139,8 @@ func (s *Server) GenerateEventSources(topics []string) {
 	}
 }
 
-func checkError(err error) {
+func checkError(err error, l *zap.Logger) {
 	if err != nil {
-		log.Println(err.Error())
+		l.Error("", zap.Error(err))
 	}
 }

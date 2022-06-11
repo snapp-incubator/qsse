@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"go.uber.org/zap"
 	"log"
 	"runtime"
 
@@ -16,7 +17,7 @@ type SubscribeWork struct {
 	EventSource *EventSource
 }
 
-func NewWorker() Worker {
+func NewWorker(l *zap.Logger) Worker {
 	var worker Worker
 
 	numCPU := runtime.NumCPU()
@@ -24,7 +25,7 @@ func NewWorker() Worker {
 	worker.SubscribePool = tunny.NewFunc(numCPU, func(work any) any {
 		data, ok := work.(*SubscribeWork)
 		if !ok {
-			log.Println("Worker: invalid work input")
+			l.Warn("Worker: invalid work input")
 
 			return nil
 		}
@@ -34,7 +35,7 @@ func NewWorker() Worker {
 		eventSource := data.EventSource
 
 		for i, subscriber := range eventSource.Subscribers {
-			log.Println("Sending event to subscriber for topic:", topic)
+			l.Info("Sending event to subscriber for topic", zap.String("topic", topic))
 			event := NewEvent(topic, event)
 			err := WriteData(event, subscriber)
 			if err != nil {

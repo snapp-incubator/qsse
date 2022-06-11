@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 )
 
 type Error struct {
@@ -26,11 +27,11 @@ func NewErr(code int, data map[string]any) *Error {
 	}
 }
 
-func UnmarshalError(bytes []byte) Error {
+func UnmarshalError(bytes []byte, l *zap.Logger) Error {
 	var e Error
 
 	if err := json.Unmarshal(bytes, &e); err != nil {
-		checkError(err)
+		l.Error("", zap.Error(err))
 	}
 
 	return e

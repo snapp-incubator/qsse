@@ -2,6 +2,7 @@ package qsse
 
 import (
 	"crypto/tls"
+	"github.com/snapp-incubator/qsse/internal/logger"
 
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
@@ -26,13 +27,15 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
+	l := logger.New()
 	server := internal.Server{
-		Worker:        internal.NewWorker(),
+		Worker:        internal.NewWorker(l),
 		Listener:      listener,
 		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
+		Logger:        l,
 	}
 
 	server.GenerateEventSources(topics)
