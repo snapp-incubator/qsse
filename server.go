@@ -15,9 +15,7 @@ type ServerConfig struct {
 }
 
 type MetricConfig struct {
-	Enabled   bool
 	NameSpace string
-	Port      string
 }
 
 type Server interface {
@@ -39,7 +37,9 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
-	metric := internal.NewMetrics(config.Metric.Enabled, config.Metric.NameSpace, config.Metric.Port)
+	go internal.GetMetricHandler(address)
+
+	metric := internal.NewMetrics(config.Metric.NameSpace)
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
 		Listener:      listener,
@@ -61,9 +61,7 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 	if cfg == nil {
 		return &ServerConfig{
 			Metric: &MetricConfig{
-				Enabled:   false,
 				NameSpace: "qsse",
-				Port:      "8081",
 			},
 			TLSConfig: GetDefaultTLSConfig(),
 		}
@@ -71,9 +69,7 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 
 	if cfg.Metric == nil {
 		cfg.Metric = &MetricConfig{
-			Enabled:   false,
 			NameSpace: "qsse",
-			Port:      "8081",
 		}
 	}
 
