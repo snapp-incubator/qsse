@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"github.com/snapp-incubator/qsse/internal/logger"
 	"testing"
 
 	"github.com/snapp-incubator/qsse/internal"
@@ -72,7 +71,7 @@ func TestFindTopicsList(t *testing.T) {
 		},
 	}
 
-	l := logger.New()
+	l := internal.New()
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
@@ -110,7 +109,7 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 		},
 	}
 
-	l := logger.New()
+	l := internal.New()
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {

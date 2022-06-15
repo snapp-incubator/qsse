@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"go.uber.org/zap"
 	"path/filepath"
+
+	"go.uber.org/zap"
 )
 
 const (

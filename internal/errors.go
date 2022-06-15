@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+
 	"go.uber.org/zap"
 )
 

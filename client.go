@@ -5,11 +5,11 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"github.com/snapp-incubator/qsse/internal/logger"
-	"go.uber.org/zap"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/zap"
+
 	"github.com/snapp-incubator/qsse/internal"
 )
 
@@ -42,7 +42,8 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	processedConfig := processConfig(config)
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
-	l := logger.New()
+	l := internal.New()
+
 	if err != nil {
 		if config.ReconnectPolicy.Retry {
 			l.Warn("Failed to connect to server, retrying...")

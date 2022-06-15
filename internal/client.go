@@ -5,10 +5,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
 	"strings"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/zap"
 )
 
 type Client struct {
@@ -63,6 +63,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		default:
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics, c.Logger)
 			c.Logger.Info("events:", zap.String("events", strings.Join(topics, " ")))
+
 			if len(topics) > 0 {
 				for _, topic := range topics {
 					eventHandler, ok := c.OnEvent[topic]

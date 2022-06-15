@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"go.uber.org/zap"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/zap"
 )
 
 type Subscriber struct {

@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"go.uber.org/zap"
 	"log"
 	"runtime"
 
 	"github.com/Jeffail/tunny"
+	"go.uber.org/zap"
 )
 
 type Worker struct {

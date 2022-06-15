@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 	"go.uber.org/zap"
@@ -35,7 +36,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 
 // Publish publishes an event to all the subscribers of the given topic.
 func (s *Server) Publish(topic string, event []byte) {
-	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger)
+	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger.Named("topic"))
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok {
 			source.DataChannel <- event
@@ -77,7 +78,7 @@ func (s *Server) AcceptClients() {
 
 		s.Logger.Info("found a new client")
 
-		client := NewSubscriber(connection, s.Logger)
+		client := NewSubscriber(connection, s.Logger.Named("error"))
 		go s.handleClient(client)
 	}
 }
@@ -91,7 +92,7 @@ func (s *Server) handleClient(client *Subscriber) {
 
 		code := quic.ApplicationErrorCode(CodeNotAuthorized)
 		err := client.connection.CloseWithError(code, ErrNotAuthorized.Error())
-		checkError(err, s.Logger)
+		checkError(err, s.Logger.Named("error"))
 
 		return
 	}
@@ -141,6 +142,6 @@ func (s *Server) GenerateEventSources(topics []string) {
 
 func checkError(err error, l *zap.Logger) {
 	if err != nil {
-		l.Error("", zap.Error(err))
+		l.Error("error occurred", zap.Error(err))
 	}
 }
