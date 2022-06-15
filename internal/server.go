@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net/http"
 
 	"github.com/lucas-clemente/quic-go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/snapp-incubator/qsse/auth"
 )
 
@@ -188,4 +190,8 @@ func CloseClientConnection(connection quic.Connection, code int, err error) {
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
 		log.Printf("failed to close connection with client: %+v\n", err)
 	}
+}
+
+func (s *Server) MetricHandler() http.Handler {
+	return promhttp.Handler()
 }

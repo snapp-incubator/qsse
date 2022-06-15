@@ -1,12 +1,8 @@
 package internal
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Metrics struct {
@@ -16,17 +12,8 @@ type Metrics struct {
 	DistributeCounter prometheus.Counter
 }
 
-func MetricHandler(port string) {
-	http.Handle("/metrics", promhttp.Handler())
-	log.Println(http.ListenAndServe(":"+port, nil))
-}
-
-func NewMetrics(enabled bool, namespace string, port string) Metrics {
+func NewMetrics(namespace string) Metrics {
 	var metric Metrics
-
-	if enabled {
-		go MetricHandler(port)
-	}
 
 	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
