@@ -192,8 +192,6 @@ func CloseClientConnection(connection quic.Connection, code int, err error) {
 	}
 }
 
-func GetMetricHandler(address string) {
-	port := address[10:14]
-	http.Handle("/metrics", promhttp.Handler())
-	log.Println(http.ListenAndServe(":"+port, nil))
+func GetMetricHandler() http.Handler {
+	return promhttp.Handler()
 }
