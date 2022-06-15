@@ -192,6 +192,6 @@ func CloseClientConnection(connection quic.Connection, code int, err error) {
 	}
 }
 
-func GetMetricHandler() http.Handler {
+func (s *Server) MetricHandler() http.Handler {
 	return promhttp.Handler()
 }

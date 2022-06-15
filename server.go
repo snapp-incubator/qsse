@@ -2,6 +2,7 @@ package qsse
 
 import (
 	"crypto/tls"
+	"net/http"
 
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
@@ -26,6 +27,8 @@ type Server interface {
 
 	SetAuthorizer(auth.Authorizer)
 	SetAuthorizerFunc(auth.AuthorizerFunc)
+
+	MetricHandler() http.Handler
 }
 
 // NewServer creates a new server and listen for connections on the given address.
@@ -36,8 +39,6 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
-
-	go internal.GetMetricHandler(address)
 
 	metric := internal.NewMetrics(config.Metric.NameSpace)
 	server := internal.Server{
