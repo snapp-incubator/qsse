@@ -53,13 +53,13 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 
 		var event Event
 		if err = json.Unmarshal(bytes, &event); err != nil {
-			checkError(err, c.Logger)
+			checkError(err, c.Logger.Named("error"))
 		}
 
 		switch {
 		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data, c.Logger)
-			c.OnError(err.Code, err.Data, c.Logger)
+			c.OnError(err.Code, err.Data, c.Logger.Named("error"))
 		default:
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics, c.Logger)
 			c.Logger.Info("events:", zap.String("events", strings.Join(topics, " ")))

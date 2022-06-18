@@ -26,15 +26,15 @@ func NewOffer(token string, topics []string) Offer {
 
 func NewSubscriber(connection quic.Connection, logger *zap.Logger) *Subscriber {
 	stream, err := connection.AcceptUniStream(context.Background())
-	checkError(err, logger)
+	checkError(err, logger.Named("error"))
 
 	reader := bufio.NewReader(stream)
 	bytes, err := reader.ReadBytes(DELIMITER)
-	checkError(err, logger)
+	checkError(err, logger.Named("error"))
 
 	var offer Offer
 	err = json.Unmarshal(bytes, &offer)
-	checkError(err, logger)
+	checkError(err, logger.Named("error"))
 
 	return &Subscriber{
 		connection: connection,

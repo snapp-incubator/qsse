@@ -74,7 +74,7 @@ func (s *Server) AcceptClients() {
 	for {
 		background := context.Background()
 		connection, err := s.Listener.Accept(background)
-		checkError(err, s.Logger)
+		checkError(err, s.Logger.Named("error"))
 
 		s.Logger.Info("found a new client")
 
@@ -100,7 +100,7 @@ func (s *Server) handleClient(client *Subscriber) {
 	s.Logger.Info("client is authenticated")
 
 	sendStream, err := client.connection.OpenUniStream()
-	checkError(err, s.Logger)
+	checkError(err, s.Logger.Named("error"))
 
 	s.addClientTopicsToEventSources(client, sendStream)
 }
@@ -123,7 +123,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 			errBytes, _ := json.Marshal(e) //nolint:errchkjson
 			errEvent := NewEvent(ErrorTopic, errBytes)
 			err := WriteData(errEvent, sendStream)
-			checkError(err, s.Logger)
+			checkError(err, s.Logger.Named("error"))
 		}
 	}
 }
