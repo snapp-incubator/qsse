@@ -3,12 +3,12 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/snapp-incubator/qsse/auth"
+	"go.uber.org/zap"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -20,6 +20,7 @@ type Server struct {
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
+	Logger       *zap.Logger
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
@@ -31,7 +32,7 @@ func DefaultAuthenticationFunc(token string) bool {
 	return true
 }
 
-// DefaultAuthenticationFunc is the default authorization function. it accepts all clients.
+// DefaultAuthorizationFunc is the default authorization function. it accepts all clients.
 func DefaultAuthorizationFunc(token, topic string) bool {
 	return true
 }
@@ -64,7 +65,7 @@ func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
 	s.Authorizer = authorizer
 }
 
-// SetAuthenticatorFunc replaces the authentication function.
+// SetAuthorizerFunc replaces the authentication function.
 func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
 }
@@ -81,18 +82,18 @@ func (s *Server) AcceptClients() {
 
 		connection, err := s.Listener.Accept(background)
 		if err != nil {
-			log.Printf("failed to accept new client: %+v\n", err)
+			s.Logger.Info("failed to accept new client", zap.Error(err))
 
 			continue
 		}
 
-		log.Println("found a new client")
+		s.Logger.Info("found a new client")
 
 		var client *Subscriber
 
 		client, err = NewSubscriber(connection)
 		if err != nil {
-			log.Printf("failed to handle new subscriber: %+v\n", err)
+			s.Logger.Error("failed to handle new subscriber", zap.Error(err))
 
 			continue
 		}
@@ -106,19 +107,26 @@ func (s *Server) AcceptClients() {
 func (s *Server) handleClient(client *Subscriber) {
 	isValid := s.Authenticator.Authenticate(client.Token)
 	if !isValid {
-		log.Println("client is not valid")
+		s.Logger.Warn("client is not valid")
 
-		CloseClientConnection(client.connection, CodeNotAuthorized, ErrNotAuthorized)
+		err := CloseClientConnection(client.connection, CodeNotAuthorized, ErrNotAuthorized)
+		if err != nil {
+			s.Logger.Error("failed to close connection with client", zap.Error(err))
+		}
 
 		return
 	}
 
-	log.Println("client is authenticated")
+	s.Logger.Info("client is authenticated")
 
 	sendStream, err := client.connection.OpenUniStream()
 	if err != nil {
-		log.Printf("failed to open send stream to client: %+v\n", err)
-		CloseClientConnection(client.connection, CodeUnknown, err)
+		s.Logger.Error("failed to open send stream to client", zap.Error(err))
+
+		er := CloseClientConnection(client.connection, CodeUnknown, err)
+		if er != nil {
+			s.Logger.Error("failed to close connection with client", zap.Error(err))
+		}
 
 		return
 	}
@@ -131,7 +139,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 	for _, topic := range client.Topics {
 		valid, err := s.isTopicValid(client, sendStream, topic)
 		if err != nil {
-			log.Printf("failed to send error to client: %+v\n", err)
+			s.Logger.Error("failed to send error to client", zap.Error(err))
 
 			break
 		}
@@ -146,7 +154,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 // isTopicValid check whether topic exists and client is authorized on it or not.
 func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, topic string) (bool, error) {
 	if _, ok := s.EventSources[topic]; !ok {
-		log.Printf("topic doesn't exists: %s\n", topic)
+		s.Logger.Warn("topic doesn't exists", zap.String("topic", topic))
 
 		err := SendError(sendStream, NewErr(CodeTopicNotAvailable, map[string]any{"topic": topic}))
 
@@ -154,7 +162,7 @@ func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, to
 	}
 
 	if !s.Authorizer.Authorize(client.Token, topic) {
-		log.Printf("client is not authorized for topic: %s", topic)
+		s.Logger.Warn("client is not authorized for topic", zap.String("topic", topic))
 
 		err := SendError(sendStream, NewErr(CodeNotAuthorized, map[string]any{"topic": topic}))
 
@@ -168,7 +176,7 @@ func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, to
 func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
-			log.Printf("creating new event source for topic %s", topic)
+			s.Logger.Info("creating new event source for topic", zap.String("topic", topic))
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{}, s.Metrics)
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
@@ -184,12 +192,15 @@ func SendError(sendStream quic.SendStream, e *Error) error {
 	return WriteData(errEvent, sendStream)
 }
 
-func CloseClientConnection(connection quic.Connection, code int, err error) {
+// CloseClientConnection
+func CloseClientConnection(connection quic.Connection, code int, err error) error {
 	appCode := quic.ApplicationErrorCode(code)
 
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
-		log.Printf("failed to close connection with client: %+v\n", err)
+		return err
 	}
+
+	return nil
 }
 
 func (s *Server) MetricHandler() http.Handler {

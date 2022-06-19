@@ -40,7 +40,7 @@ type ReconnectPolicy struct {
 //nolint:funlen
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
 	processedConfig := processConfig(config)
-	l := internal.NewLogger()
+	l := internal.NewLogger().Named("client")
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {

@@ -60,7 +60,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 
 		switch {
 		case event.Topic == ErrorTopic:
-			err := UnmarshalError(event.Data)
+			err := UnmarshalError(event.Data, c.Logger.Named("error"))
 
 			c.OnError(err.Code, err.Data, c.Logger)
 		default:

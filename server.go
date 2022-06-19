@@ -41,6 +41,7 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	}
 
 	metric := internal.NewMetrics(config.Metric.NameSpace)
+	l := internal.NewLogger().Named("server")
 	server := internal.Server{
 		Worker:        internal.NewWorker(),
 		Listener:      listener,
@@ -49,6 +50,7 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
 		Metrics:       metric,
+		Logger:        l,
 	}
 
 	server.GenerateEventSources(topics)
