@@ -60,9 +60,11 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 		switch {
 		case event.Topic == ErrorTopic:
 			err := UnmarshalError(event.Data, c.Logger)
+
 			c.OnError(err.Code, err.Data, c.Logger.Named("error"))
 		default:
 			topics := FindRelatedWildcardTopics(event.Topic, c.Topics, c.Logger)
+			
 			c.Logger.Info("events:", zap.String("events", strings.Join(topics, " ")))
 
 			if len(topics) > 0 {

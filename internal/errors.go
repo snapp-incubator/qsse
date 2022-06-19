@@ -14,11 +14,20 @@ type Error struct {
 
 const ErrorTopic = "error"
 
-var ErrNotAuthorized = errors.New("not authorized")
+var (
+	ErrNotAuthorized        = errors.New("not authorized")
+	ErrFailedToCreateStream = errors.New("failed to create send/receive stream to client")
+	ErrFailedToReadOffer    = errors.New("failed to read offer from client")
+	ErrFailedToSendOffer    = errors.New("failed to send offer to server")
+	ErrFailedToMarshal      = errors.New("failed to marshal/unmarshal data")
+)
 
 const (
 	CodeNotAuthorized = iota + 1
 	CodeTopicNotAvailable
+	CodeFailedToCreateStream
+	CodeFailedToSendOffer
+	CodeUnknown
 )
 
 func NewErr(code int, data map[string]any) *Error {
@@ -33,6 +42,9 @@ func UnmarshalError(bytes []byte, l *zap.Logger) Error {
 
 	if err := json.Unmarshal(bytes, &e); err != nil {
 		l.Error("", zap.Error(err))
+
+		e.Code = CodeUnknown
+		e.Data = make(map[string]any)
 	}
 
 	return e

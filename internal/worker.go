@@ -25,24 +25,31 @@ func NewWorker(l *zap.Logger) Worker {
 	worker.SubscribePool = tunny.NewFunc(numCPU, func(work any) any {
 		data, ok := work.(*SubscribeWork)
 		if !ok {
-			l.Warn("Worker: invalid work input")
+			log.Println("Worker: invalid work input")
 
 			return nil
 		}
 
 		topic := data.EventSource.Topic
-		event := data.Event
+		eventData := data.Event
 		eventSource := data.EventSource
+		event := NewEvent(topic, eventData)
 
-		for i, subscriber := range eventSource.Subscribers {
-			l.Info("Sending event to subscriber for topic", zap.String("topic", topic))
-			event := NewEvent(topic, event)
+		eventSource.Metrics.IncDistributeEvent()
+
+		i := 0
+		for _, subscriber := range eventSource.Subscribers {
 			err := WriteData(event, subscriber)
+			eventSource.Metrics.DecEvent(topic)
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
-				eventSource.Subscribers = append(eventSource.Subscribers[:i], eventSource.Subscribers[i+1:]...)
+				eventSource.Metrics.DecSubscriber(topic)
+			} else {
+				eventSource.Subscribers[i] = subscriber
+				i++
 			}
 		}
+		eventSource.Subscribers = eventSource.Subscribers[:i]
 
 		return nil
 	})

@@ -24,21 +24,27 @@ func NewOffer(token string, topics []string) Offer {
 	return Offer{Token: token, Topics: topics}
 }
 
-func NewSubscriber(connection quic.Connection, logger *zap.Logger) *Subscriber {
+func NewSubscriber(connection quic.Connection, logger *zap.Logger) (*Subscriber, error) {
 	stream, err := connection.AcceptUniStream(context.Background())
-	checkError(err, logger.Named("error"))
+	if err != nil {
+		return nil, ErrFailedToCreateStream
+	}
 
 	reader := bufio.NewReader(stream)
+
 	bytes, err := reader.ReadBytes(DELIMITER)
-	checkError(err, logger.Named("error"))
+	if err != nil {
+		return nil, ErrFailedToReadOffer
+	}
 
 	var offer Offer
-	err = json.Unmarshal(bytes, &offer)
-	checkError(err, logger.Named("error"))
+	if err := json.Unmarshal(bytes, &offer); err != nil {
+		return nil, ErrFailedToMarshal
+	}
 
 	return &Subscriber{
 		connection: connection,
 		Token:      offer.Token,
 		Topics:     offer.Topics,
-	}
+	}, nil
 }
