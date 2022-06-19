@@ -9,7 +9,6 @@ import (
 	"github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/snapp-incubator/qsse/auth"
-	"go.uber.org/zap"
 )
 
 // DELIMITER is the delimiter used to separate messages in streams.
@@ -21,7 +20,6 @@ type Server struct {
 	Listener     quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
-	Logger       *zap.Logger
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
@@ -33,7 +31,7 @@ func DefaultAuthenticationFunc(token string) bool {
 	return true
 }
 
-// DefaultAuthorizationFunc is the default authorization function. it accepts all clients.
+// DefaultAuthenticationFunc is the default authorization function. it accepts all clients.
 func DefaultAuthorizationFunc(token, topic string) bool {
 	return true
 }
@@ -42,9 +40,9 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 func (s *Server) Publish(topic string, event []byte) {
 	s.Metrics.IncPublishEvent()
 
-	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger.Named("topic"))
+	matchedTopics := FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
-		if source, ok := s.EventSources[matchedTopic]; ok {
+		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
 			s.Metrics.IncEvent(matchedTopic)
 			source.DataChannel <- event
 		}
@@ -66,7 +64,7 @@ func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
 	s.Authorizer = authorizer
 }
 
-// SetAuthorizerFunc replaces the authentication function.
+// SetAuthenticatorFunc replaces the authentication function.
 func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
 }
@@ -92,7 +90,7 @@ func (s *Server) AcceptClients() {
 
 		var client *Subscriber
 
-		client, err = NewSubscriber(connection, s.Logger)
+		client, err = NewSubscriber(connection)
 		if err != nil {
 			log.Printf("failed to handle new subscriber: %+v\n", err)
 

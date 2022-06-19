@@ -2,42 +2,31 @@ package internal
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"strings"
+	"log"
 
 	"github.com/lucas-clemente/quic-go"
-	"go.uber.org/zap"
 )
 
 type Client struct {
 	Connection quic.Connection
 	Token      string
 	Topics     []string
-	Logger     *zap.Logger
 
 	OnEvent   map[string]func(event []byte)
-	OnMessage func(topic string, message []byte, l *zap.Logger)
-	OnError   func(code int, data map[string]any, l *zap.Logger)
+	OnMessage func(topic string, message []byte)
+	OnError   func(code int, data map[string]any)
 }
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
-var DefaultOnMessage = func(topic string, message []byte, l *zap.Logger) { //nolint:gochecknoglobals
-	l.Info("default message", zap.String("topic", topic), zap.String("data", string(message)))
+var DefaultOnMessage = func(topic string, message []byte) { //nolint:gochecknoglobals
+	log.Printf("topic: %s\ndata: %s\n", topic, string(message))
 }
 
 // DefaultOnError Default handler for processing errors.
 // it listen to topic "error".
-var DefaultOnError = func(code int, data map[string]any, l *zap.Logger) { //nolint:gochecknoglobals
-	b := new(bytes.Buffer)
-	for key, value := range data {
-		if _, err := fmt.Fprintf(b, "%s=\"%s\"\n", key, value); err != nil {
-			l.Warn("cannot parse data map", zap.Error(err))
-		}
-	}
-
-	l.Info("default error message", zap.Int("code", code), zap.String("data", b.String()))
+var DefaultOnError = func(code int, data map[string]any) { //nolint:gochecknoglobals
+	log.Printf("Error: %d - %+v\n", code, data)
 }
 
 // AcceptEvents reads events from the stream and calls the proper handler.
@@ -49,23 +38,23 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, err := reader.ReadBytes(DELIMITER)
 		if err != nil {
-			c.Logger.Fatal("failed to read event", zap.Error(err))
+			log.Fatalf("failed to read event: %+v", err)
 		}
 
 		var event Event
 		if err = json.Unmarshal(bytes, &event); err != nil {
-			checkError(err, c.Logger.Named("error"))
+			log.Printf("failed to unmarshal event: %+v\n", err)
+
+			continue
 		}
 
 		switch {
 		case event.Topic == ErrorTopic:
-			err := UnmarshalError(event.Data, c.Logger)
+			err := UnmarshalError(event.Data)
 
-			c.OnError(err.Code, err.Data, c.Logger.Named("error"))
+			c.OnError(err.Code, err.Data)
 		default:
-			topics := FindRelatedWildcardTopics(event.Topic, c.Topics, c.Logger)
-			
-			c.Logger.Info("events:", zap.String("events", strings.Join(topics, " ")))
+			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
 
 			if len(topics) > 0 {
 				for _, topic := range topics {
@@ -73,11 +62,11 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 					if ok {
 						eventHandler(event.Data)
 					} else {
-						c.OnMessage(topic, event.Data, c.Logger)
+						c.OnMessage(topic, event.Data)
 					}
 				}
 			} else {
-				c.OnMessage(event.Topic, event.Data, c.Logger)
+				c.OnMessage(event.Topic, event.Data)
 			}
 		}
 	}
@@ -89,16 +78,16 @@ func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
 		c.Topics = AppendIfMissing(c.Topics, topic)
 		c.OnEvent[topic] = handler
 	} else {
-		c.Logger.Warn("topic is not valid")
+		log.Printf("topic is not valid")
 	}
 }
 
 // SetErrorHandler sets the handler for "error" topic.
-func (c *Client) SetErrorHandler(handler func(code int, data map[string]any, l *zap.Logger)) {
+func (c *Client) SetErrorHandler(handler func(code int, data map[string]any)) {
 	c.OnError = handler
 }
 
 // SetMessageHandler sets the handler for all topics without handler and "error" topic.
-func (c *Client) SetMessageHandler(handler func(topic string, message []byte, l *zap.Logger)) {
+func (c *Client) SetMessageHandler(handler func(topic string, message []byte)) {
 	c.OnMessage = handler
 }

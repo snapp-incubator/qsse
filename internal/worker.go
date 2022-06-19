@@ -5,7 +5,6 @@ import (
 	"runtime"
 
 	"github.com/Jeffail/tunny"
-	"go.uber.org/zap"
 )
 
 type Worker struct {
@@ -17,7 +16,7 @@ type SubscribeWork struct {
 	EventSource *EventSource
 }
 
-func NewWorker(l *zap.Logger) Worker {
+func NewWorker() Worker {
 	var worker Worker
 
 	numCPU := runtime.NumCPU()

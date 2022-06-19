@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"github.com/lucas-clemente/quic-go"
-	"go.uber.org/zap"
 )
 
 type Subscriber struct {
@@ -24,7 +23,7 @@ func NewOffer(token string, topics []string) Offer {
 	return Offer{Token: token, Topics: topics}
 }
 
-func NewSubscriber(connection quic.Connection, logger *zap.Logger) (*Subscriber, error) {
+func NewSubscriber(connection quic.Connection) (*Subscriber, error) {
 	stream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
 		return nil, ErrFailedToCreateStream

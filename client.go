@@ -10,7 +10,6 @@ import (
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
-	"go.uber.org/zap"
 )
 
 const (
@@ -21,9 +20,9 @@ const (
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
-	SetErrorHandler(handler func(code int, data map[string]any, l *zap.Logger))
+	SetErrorHandler(handler func(code int, data map[string]any))
 
-	SetMessageHandler(handler func(topic string, event []byte, l *zap.Logger))
+	SetMessageHandler(handler func(topic string, event []byte))
 }
 
 type ClientConfig struct {
@@ -38,19 +37,18 @@ type ReconnectPolicy struct {
 	RetryInterval int // duration between retry intervals in milliseconds
 }
 
+//nolint:funlen
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
 	processedConfig := processConfig(config)
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
-	l := internal.NewLogger().Named("client")
-
 	if err != nil {
-		if config.ReconnectPolicy.Retry {
-			l.Warn("Failed to connect to server, retrying...")
+		if processedConfig.ReconnectPolicy.Retry {
+			log.Println("Failed to connect to server, retrying...")
 
-			c, res := reconnect(*config.ReconnectPolicy, address, processedConfig.TLSConfig, l.Named("reconnect"))
+			c, res := reconnect(*processedConfig.ReconnectPolicy, address, processedConfig.TLSConfig)
 			if !res {
-				l.Warn("reconnecting failed")
+				log.Println("reconnecting failed")
 
 				return nil, err //nolint:wrapcheck
 			}
@@ -68,7 +66,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		OnEvent:    make(map[string]func([]byte)),
 		OnMessage:  internal.DefaultOnMessage,
 		OnError:    internal.DefaultOnError,
-		Logger:     l,
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
@@ -140,14 +137,14 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
-func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
 		connection, err := quic.DialAddr(address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
 		}
 
-		l.Warn("failed to reconnect", zap.Error(err))
+		log.Printf("failed to reconnect: %+v", err)
 
 		time.Sleep(time.Duration(policy.RetryInterval) * time.Millisecond)
 	}

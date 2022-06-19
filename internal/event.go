@@ -24,9 +24,9 @@ func NewEventSource(
 	topic string,
 	dataChannel chan []byte,
 	subscribers []quic.SendStream,
-	metrics Metrics,
+	metric Metrics,
 ) *EventSource {
-	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers}
+	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers, Metrics: metric}
 }
 
 func NewEvent(topic string, data []byte) *Event {

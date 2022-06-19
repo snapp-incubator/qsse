@@ -40,17 +40,15 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
-	l := internal.NewLogger()
 	metric := internal.NewMetrics(config.Metric.NameSpace)
 	server := internal.Server{
-		Worker:        internal.NewWorker(l),
+		Worker:        internal.NewWorker(),
 		Listener:      listener,
 		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
 		Metrics:       metric,
-		Logger:        l,
 	}
 
 	server.GenerateEventSources(topics)
