@@ -71,11 +71,11 @@ func TestFindTopicsList(t *testing.T) {
 		},
 	}
 
-	l := internal.New()
+	l := internal.NewLogger()
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := internal.FindTopicsList(testCase.topics, testCase.pattern, l)
+			result := internal.FindTopicsList(testCase.topics, testCase.pattern, l.Named("test-find-topics-list"))
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 
@@ -109,11 +109,15 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 		},
 	}
 
-	l := internal.New()
+	l := internal.NewLogger()
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := internal.FindRelatedWildcardTopics(testCase.topic, testCase.topics, l)
+			result := internal.FindRelatedWildcardTopics(
+				testCase.topic,
+				testCase.topics,
+				l.Named("test-find-related-wildcard-topics"),
+			)
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 	}
