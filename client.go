@@ -41,7 +41,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	processedConfig := processConfig(config)
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
-	l := internal.New().Named("client")
+	l := internal.NewLogger().Named("client")
 
 	if err != nil {
 		if config.ReconnectPolicy.Retry {

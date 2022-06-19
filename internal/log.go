@@ -15,7 +15,7 @@ const (
 	enabled = false
 )
 
-func New() *zap.Logger {
+func NewLogger() *zap.Logger {
 	var lvl zapcore.Level
 	if err := lvl.Set(level); err != nil {
 		log.Printf("cannot parse log level %s: %s", level, err)

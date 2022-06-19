@@ -26,7 +26,7 @@ func NewServer(address string, tlsConfig *tls.Config, topics []string) (Server, 
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
-	l := internal.New()
+	l := internal.NewLogger()
 	server := internal.Server{
 		Worker:        internal.NewWorker(l),
 		Listener:      listener,
