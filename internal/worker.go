@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"log"
 	"runtime"
 
 	"github.com/Jeffail/tunny"
+	"go.uber.org/zap"
 )
 
 type Worker struct {
@@ -16,7 +16,7 @@ type SubscribeWork struct {
 	EventSource *EventSource
 }
 
-func NewWorker() Worker {
+func NewWorker(l *zap.Logger) Worker {
 	var worker Worker
 
 	numCPU := runtime.NumCPU()
@@ -24,7 +24,7 @@ func NewWorker() Worker {
 	worker.SubscribePool = tunny.NewFunc(numCPU, func(work any) any {
 		data, ok := work.(*SubscribeWork)
 		if !ok {
-			log.Println("Worker: invalid work input")
+			l.Warn("Worker: invalid work input")
 
 			return nil
 		}
@@ -41,7 +41,7 @@ func NewWorker() Worker {
 			err := WriteData(event, subscriber)
 			eventSource.Metrics.DecEvent(topic)
 			if err != nil {
-				log.Printf("err while sending event to client: %s", err.Error())
+				l.Error("err while sending event to client", zap.Error(err))
 				eventSource.Metrics.DecSubscriber(topic)
 			} else {
 				eventSource.Subscribers[i] = subscriber

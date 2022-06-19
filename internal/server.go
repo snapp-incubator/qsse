@@ -41,7 +41,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 func (s *Server) Publish(topic string, event []byte) {
 	s.Metrics.IncPublishEvent()
 
-	matchedTopics := FindTopicsList(s.Topics, topic)
+	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger.Named("topic"))
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
 			s.Metrics.IncEvent(matchedTopic)
@@ -192,7 +192,6 @@ func SendError(sendStream quic.SendStream, e *Error) error {
 	return WriteData(errEvent, sendStream)
 }
 
-// CloseClientConnection
 func CloseClientConnection(connection quic.Connection, code int, err error) error {
 	appCode := quic.ApplicationErrorCode(code)
 

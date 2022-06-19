@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"log"
 	"path/filepath"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -25,7 +26,7 @@ func TopicHasWildcard(topic string) bool {
 }
 
 // FindTopicsList find topics that match the topic pattern.
-func FindTopicsList(topics []string, pattern string) []string {
+func FindTopicsList(topics []string, pattern string, l *zap.Logger) []string {
 	var matchedTopics []string
 
 	for _, topic := range topics {
@@ -33,7 +34,7 @@ func FindTopicsList(topics []string, pattern string) []string {
 		if ok {
 			matchedTopics = append(matchedTopics, topic)
 		} else if err != nil {
-			log.Println("error in topic matching")
+			l.Warn("error in topic matching")
 		}
 	}
 
@@ -41,7 +42,7 @@ func FindTopicsList(topics []string, pattern string) []string {
 }
 
 // FindRelatedWildcardTopics find topics patterns that are applicable to the given topic.
-func FindRelatedWildcardTopics(topic string, topics []string) []string {
+func FindRelatedWildcardTopics(topic string, topics []string, l *zap.Logger) []string {
 	var matchedTopics []string
 
 	for _, pattern := range topics {
@@ -49,7 +50,7 @@ func FindRelatedWildcardTopics(topic string, topics []string) []string {
 		if ok {
 			matchedTopics = append(matchedTopics, pattern)
 		} else if err != nil {
-			log.Println("error in topic matching")
+			l.Warn("error in topic matching")
 		}
 	}
 

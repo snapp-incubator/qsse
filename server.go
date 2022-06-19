@@ -43,7 +43,7 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	metric := internal.NewMetrics(config.Metric.NameSpace)
 	l := internal.NewLogger().Named("server")
 	server := internal.Server{
-		Worker:        internal.NewWorker(),
+		Worker:        internal.NewWorker(l.Named("worker")),
 		Listener:      listener,
 		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
