@@ -111,7 +111,10 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := internal.FindRelatedWildcardTopics(testCase.topic, testCase.topics)
+			result := internal.FindRelatedWildcardTopics(
+				testCase.topic,
+				testCase.topics,
+			)
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 	}
