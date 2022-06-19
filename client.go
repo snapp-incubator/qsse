@@ -5,11 +5,11 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
+	"go.uber.org/zap"
 )
 
 const (
@@ -20,9 +20,9 @@ const (
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
-	SetErrorHandler(handler func(code int, data map[string]any))
+	SetErrorHandler(handler func(code int, data map[string]any, l *zap.Logger))
 
-	SetMessageHandler(handler func(topic string, event []byte))
+	SetMessageHandler(handler func(topic string, event []byte, l *zap.Logger))
 }
 
 type ClientConfig struct {
@@ -40,15 +40,21 @@ type ReconnectPolicy struct {
 //nolint:funlen
 func NewClient(address string, topics []string, config *ClientConfig) (Client, error) {
 	processedConfig := processConfig(config)
+	l := internal.NewLogger()
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if processedConfig.ReconnectPolicy.Retry {
-			log.Println("Failed to connect to server, retrying...")
+			l.Warn("Failed to connect to server, retrying...")
 
-			c, res := reconnect(*processedConfig.ReconnectPolicy, address, processedConfig.TLSConfig)
+			c, res := reconnect(
+				*processedConfig.ReconnectPolicy,
+				address,
+				processedConfig.TLSConfig,
+				l.Named("reconnect"),
+			)
 			if !res {
-				log.Println("reconnecting failed")
+				l.Warn("reconnecting failed")
 
 				return nil, err //nolint:wrapcheck
 			}
@@ -66,20 +72,21 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		OnEvent:    make(map[string]func([]byte)),
 		OnMessage:  internal.DefaultOnMessage,
 		OnError:    internal.DefaultOnError,
+		Logger:     l,
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
 
 	bytes, err := json.Marshal(offer)
 	if err != nil {
-		log.Printf("failed to marshal offer: %+v\n", err)
+		l.Error("failed to marshal offer", zap.Error(err))
 
 		return nil, internal.ErrFailedToMarshal
 	}
 
 	stream, err := connection.OpenUniStream()
 	if err != nil {
-		log.Printf("failed to open send stream: %+v\n", err)
+		l.Error("failed to open send stream", zap.Error(err))
 		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
 
 		return nil, internal.ErrFailedToCreateStream
@@ -87,7 +94,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	err = internal.WriteData(bytes, stream)
 	if err != nil {
-		log.Printf("failed to send offer to server: %+v\n", err)
+		l.Error("failed to send offer to server", zap.Error(err))
 		internal.CloseClientConnection(connection, internal.CodeFailedToSendOffer, internal.ErrFailedToSendOffer)
 
 		return nil, internal.ErrFailedToSendOffer
@@ -97,7 +104,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
-		log.Printf("failed to open receive stream: %+v\n", err)
+		l.Error("failed to open receive stream", zap.Error(err))
 		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
 
 		return nil, internal.ErrFailedToCreateStream
@@ -137,14 +144,14 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
-func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config) (quic.Connection, bool) {
+func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
 		connection, err := quic.DialAddr(address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
 		}
 
-		log.Printf("failed to reconnect: %+v", err)
+		l.Error("failed to reconnect", zap.Error(err))
 
 		time.Sleep(time.Duration(policy.RetryInterval) * time.Millisecond)
 	}
