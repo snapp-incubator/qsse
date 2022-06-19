@@ -31,7 +31,7 @@ func main() {
 
 	topics := []string{"firstnames", "lastnames"}
 
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics)
+	server, err := qsse.NewServer("localhost:4242", topics, nil)
 	if err != nil {
 		panic(err)
 	}
