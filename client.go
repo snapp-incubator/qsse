@@ -87,7 +87,15 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	stream, err := connection.OpenUniStream()
 	if err != nil {
 		l.Error("failed to open send stream", zap.Error(err))
-		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
+		err = internal.CloseClientConnection(
+			connection,
+			internal.CodeFailedToCreateStream,
+			internal.ErrFailedToCreateStream,
+		)
+
+		if err != nil {
+			l.Error("failed to close client connection", zap.Error(err))
+		}
 
 		return nil, internal.ErrFailedToCreateStream
 	}
@@ -95,7 +103,15 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	err = internal.WriteData(bytes, stream)
 	if err != nil {
 		l.Error("failed to send offer to server", zap.Error(err))
-		internal.CloseClientConnection(connection, internal.CodeFailedToSendOffer, internal.ErrFailedToSendOffer)
+		err = internal.CloseClientConnection(
+			connection,
+			internal.CodeFailedToSendOffer,
+			internal.ErrFailedToSendOffer,
+		)
+
+		if err != nil {
+			l.Error("failed to close client connection", zap.Error(err))
+		}
 
 		return nil, internal.ErrFailedToSendOffer
 	}
@@ -105,7 +121,15 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
 		l.Error("failed to open receive stream", zap.Error(err))
-		internal.CloseClientConnection(connection, internal.CodeFailedToCreateStream, internal.ErrFailedToCreateStream)
+		err = internal.CloseClientConnection(
+			connection,
+			internal.CodeFailedToCreateStream,
+			internal.ErrFailedToCreateStream,
+		)
+
+		if err != nil {
+			l.Error("failed to close client connection", zap.Error(err))
+		}
 
 		return nil, internal.ErrFailedToCreateStream
 	}

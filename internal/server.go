@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/lucas-clemente/quic-go"
@@ -196,7 +197,7 @@ func CloseClientConnection(connection quic.Connection, code int, err error) erro
 	appCode := quic.ApplicationErrorCode(code)
 
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil
