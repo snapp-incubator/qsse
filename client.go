@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
-	"go.uber.org/zap"
-
 	"github.com/snapp-incubator/qsse/internal"
+	"go.uber.org/zap"
 )
 
 const (
@@ -42,13 +41,13 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	processedConfig := processConfig(config)
 
 	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
-	l := internal.New()
+	l := internal.New().Named("client")
 
 	if err != nil {
 		if config.ReconnectPolicy.Retry {
 			l.Warn("Failed to connect to server, retrying...")
 
-			c, res := reconnect(*config.ReconnectPolicy, address, processedConfig.TLSConfig, l)
+			c, res := reconnect(*config.ReconnectPolicy, address, processedConfig.TLSConfig, l.Named("reconnect"))
 			if !res {
 				l.Warn("reconnecting failed")
 

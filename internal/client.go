@@ -36,6 +36,7 @@ var DefaultOnError = func(code int, data map[string]any, l *zap.Logger) { //noli
 			l.Warn("cannot parse data map", zap.Error(err))
 		}
 	}
+
 	l.Info("default error message", zap.Int("code", code), zap.String("data", b.String()))
 }
 

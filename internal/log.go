@@ -11,17 +11,14 @@ import (
 )
 
 const (
-	Level   = "debug"
-	Enabled = false
-	Network = ""
-	Address = ""
-	Tag     = ""
+	level   = "debug"
+	enabled = false
 )
 
 func New() *zap.Logger {
 	var lvl zapcore.Level
-	if err := lvl.Set(Level); err != nil {
-		log.Printf("cannot parse log level %s: %s", Level, err)
+	if err := lvl.Set(level); err != nil {
+		log.Printf("cannot parse log level %s: %s", level, err)
 
 		lvl = zapcore.WarnLevel
 	}
@@ -32,11 +29,11 @@ func New() *zap.Logger {
 		defaultCore,
 	}
 
-	if Enabled {
+	if enabled {
 		p := getPriorityFromLevel(lvl.String()) | syslog.LOG_LOCAL0
 		encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 
-		writer, err := syslog.Dial(Network, Address, p, Tag)
+		writer, err := syslog.Dial("", "", p, "")
 		if err == nil {
 			cores = append(cores, zapsyslog.NewCore(lvl, encoder, writer))
 		} else {

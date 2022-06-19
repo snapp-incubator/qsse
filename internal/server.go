@@ -29,7 +29,7 @@ func DefaultAuthenticationFunc(token string) bool {
 	return true
 }
 
-// DefaultAuthenticationFunc is the default authorization function. it accepts all clients.
+// DefaultAuthorizationFunc is the default authorization function. it accepts all clients.
 func DefaultAuthorizationFunc(token, topic string) bool {
 	return true
 }
@@ -59,7 +59,7 @@ func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
 	s.Authorizer = authorizer
 }
 
-// SetAuthenticatorFunc replaces the authentication function.
+// SetAuthorizerFunc replaces the authentication function.
 func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
 }
