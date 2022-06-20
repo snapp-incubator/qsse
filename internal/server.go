@@ -88,22 +88,20 @@ func (s *Server) AcceptClients() {
 
 		log.Println("found a new client")
 
-		var client *Subscriber
-
-		client, err = NewSubscriber(connection)
-		if err != nil {
-			log.Printf("failed to handle new subscriber: %+v\n", err)
-
-			continue
-		}
-
-		go s.handleClient(client)
+		go s.handleClient(connection)
 	}
 }
 
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
-func (s *Server) handleClient(client *Subscriber) {
+func (s *Server) handleClient(connection quic.Connection) {
+	client, err := NewSubscriber(connection)
+	if err != nil {
+		log.Printf("failed to handle new subscriber: %+v\n", err)
+
+		return
+	}
+
 	isValid := s.Authenticator.Authenticate(client.Token)
 	if !isValid {
 		log.Println("client is not valid")
