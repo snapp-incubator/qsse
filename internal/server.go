@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"runtime"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -76,6 +77,8 @@ func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 // 3.1 If the authentication is successful, opens sendStream for each topic and add them to eventSources.
 // 3.2 If the authentication is not successful, closes the connection.
 func (s *Server) AcceptClients() {
+	runtime.LockOSThread()
+
 	for {
 		background := context.Background()
 
