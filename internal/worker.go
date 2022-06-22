@@ -17,28 +17,35 @@ type Worker struct {
 	Pond *koi.Pond
 }
 
-func NewWorker() Worker {
+type WorkerConfig struct {
+	ClientAcceptorCount       int64
+	ClientAcceptorQueueSize   int
+	EventDistributorCount     int64
+	EventDistributorQueueSize int
+}
+
+func NewWorker(cfg WorkerConfig) Worker {
 	var worker Worker
 
 	pond := koi.NewPond()
 	worker.Pond = pond
 
-	registerWorkers(pond)
+	registerWorkers(pond, cfg)
 
 	return worker
 }
 
-func registerWorkers(pond *koi.Pond) {
+func registerWorkers(pond *koi.Pond, cfg WorkerConfig) {
 	distributeWorker := koi.Worker{
-		QueueSize:       100,
-		ConcurrentCount: 10,
+		QueueSize:       cfg.EventDistributorQueueSize,
+		ConcurrentCount: cfg.EventDistributorCount,
 		Work:            distributeWork,
 	}
 	_ = pond.RegisterWorker(DistributeEvent, distributeWorker)
 
 	acceptClientWorker := koi.Worker{
-		QueueSize:       4,
-		ConcurrentCount: 4,
+		QueueSize:       cfg.ClientAcceptorQueueSize,
+		ConcurrentCount: cfg.ClientAcceptorCount,
 		Work:            acceptClientWork,
 	}
 	_ = pond.RegisterWorker(AcceptClient, acceptClientWorker)

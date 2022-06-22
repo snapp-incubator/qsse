@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -23,6 +24,8 @@ type Server struct {
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
 	Metrics       Metrics
+
+	CleaningInterval time.Duration
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
@@ -145,7 +148,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics)
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics, s.CleaningInterval)
 
 			go s.EventSources[topic].DistributeEvents(s.Worker)
 			go s.EventSources[topic].CleanCorruptSubscribers()

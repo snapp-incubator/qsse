@@ -3,6 +3,7 @@ package qsse
 import (
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/go-errors/errors"
 	"github.com/lucas-clemente/quic-go"
@@ -13,6 +14,15 @@ import (
 type ServerConfig struct {
 	Metric    *MetricConfig
 	TLSConfig *tls.Config
+	Worker    *WorkerConfig
+}
+
+type WorkerConfig struct {
+	CleaningInterval          time.Duration
+	ClientAcceptorCount       int64
+	ClientAcceptorQueueSize   int
+	EventDistributorCount     int64
+	EventDistributorQueueSize int
 }
 
 type MetricConfig struct {
@@ -40,21 +50,29 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
 
+	workerConfig := internal.WorkerConfig{
+		ClientAcceptorCount:       config.Worker.ClientAcceptorCount,
+		ClientAcceptorQueueSize:   config.Worker.ClientAcceptorQueueSize,
+		EventDistributorCount:     config.Worker.EventDistributorCount,
+		EventDistributorQueueSize: config.Worker.EventDistributorQueueSize,
+	}
+
 	metric := internal.NewMetrics(config.Metric.NameSpace)
-	worker := internal.NewWorker()
+	worker := internal.NewWorker(workerConfig)
 	server := internal.Server{
-		Worker:        worker,
-		Listener:      listener,
-		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
-		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
-		EventSources:  make(map[string]*internal.EventSource),
-		Topics:        topics,
-		Metrics:       metric,
+		Worker:           worker,
+		Listener:         listener,
+		Authenticator:    auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
+		Authorizer:       auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
+		EventSources:     make(map[string]*internal.EventSource),
+		Topics:           topics,
+		Metrics:          metric,
+		CleaningInterval: config.Worker.CleaningInterval,
 	}
 
 	server.GenerateEventSources(topics)
 
-	worker.AddAcceptClientWork(&server, 5)
+	worker.AddAcceptClientWork(&server, int(config.Worker.ClientAcceptorCount))
 
 	return &server, nil
 }
@@ -66,6 +84,13 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 				NameSpace: "qsse",
 			},
 			TLSConfig: GetDefaultTLSConfig(),
+			Worker: &WorkerConfig{
+				CleaningInterval:          10 * time.Second,
+				ClientAcceptorCount:       1,
+				ClientAcceptorQueueSize:   1,
+				EventDistributorCount:     1,
+				EventDistributorQueueSize: 10,
+			},
 		}
 	}
 
@@ -77,6 +102,16 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 
 	if cfg.TLSConfig == nil {
 		cfg.TLSConfig = GetDefaultTLSConfig()
+	}
+
+	if cfg.Worker == nil {
+		cfg.Worker = &WorkerConfig{
+			CleaningInterval:          10 * time.Second,
+			ClientAcceptorCount:       1,
+			ClientAcceptorQueueSize:   1,
+			EventDistributorCount:     1,
+			EventDistributorQueueSize: 10,
+		}
 	}
 
 	return cfg

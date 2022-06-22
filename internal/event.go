@@ -19,6 +19,7 @@ type EventSource struct {
 	SubscriberWaitingList []Subscriber
 	Metrics               Metrics
 	Cleaning              *atomic.Bool
+	CleaningInterval      time.Duration
 }
 
 type Event struct {
@@ -31,6 +32,7 @@ func NewEventSource(
 	dataChannel chan []byte,
 	subscribers []Subscriber,
 	metric Metrics,
+	cleaningInterval time.Duration,
 ) *EventSource {
 	return &EventSource{
 		Topic:                 topic,
@@ -40,6 +42,7 @@ func NewEventSource(
 		SubscriberWaitingList: make([]Subscriber, 0),
 		Metrics:               metric,
 		Cleaning:              atomic.NewBool(false),
+		CleaningInterval:      cleaningInterval,
 	}
 }
 
@@ -56,7 +59,7 @@ func (e *EventSource) DistributeEvents(worker Worker) {
 }
 
 func (e *EventSource) CleanCorruptSubscribers() {
-	for _ = range time.Tick(1 * time.Second) {
+	for _ = range time.Tick(e.CleaningInterval) {
 		e.Cleaning.Store(true)
 
 		i := 0
