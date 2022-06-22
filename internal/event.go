@@ -62,7 +62,9 @@ func (e *EventSource) CleanCorruptSubscribers() {
 		i := 0
 
 		for _, subscriber := range e.Subscribers {
-			if !subscriber.Corrupt.Load() {
+			if subscriber.Corrupt.Load() {
+				e.Metrics.DecSubscriber(e.Topic)
+			} else {
 				e.Subscribers[i] = subscriber
 				i++
 			}
