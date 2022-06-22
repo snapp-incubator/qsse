@@ -38,7 +38,7 @@ func NewWorker() Worker {
 
 		i := 0
 		for _, subscriber := range eventSource.Subscribers {
-			err := WriteData(event, subscriber)
+			err := WriteData(event, subscriber.Stream)
 			eventSource.Metrics.DecEvent(topic)
 			if err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())

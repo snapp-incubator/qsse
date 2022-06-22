@@ -11,7 +11,7 @@ import (
 type EventSource struct {
 	Topic       string
 	DataChannel chan []byte
-	Subscribers []quic.SendStream
+	Subscribers []Subscriber
 	Metrics     Metrics
 }
 
@@ -23,7 +23,7 @@ type Event struct {
 func NewEventSource(
 	topic string,
 	dataChannel chan []byte,
-	subscribers []quic.SendStream,
+	subscribers []Subscriber,
 	metric Metrics,
 ) *EventSource {
 	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers, Metrics: metric}

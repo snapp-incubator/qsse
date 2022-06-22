@@ -124,13 +124,15 @@ func (s *Server) handleClient(connection quic.Connection) {
 		return
 	}
 
-	s.addClientTopicsToEventSources(offer, sendStream)
+	subscriber := NewSubscriber(sendStream)
+
+	s.addClientTopicsToEventSources(offer, subscriber)
 }
 
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
-func (s *Server) addClientTopicsToEventSources(offer *Offer, sendStream quic.SendStream) {
+func (s *Server) addClientTopicsToEventSources(offer *Offer, subscriber Subscriber) {
 	for _, topic := range offer.Topics {
-		valid, err := s.isTopicValid(offer, sendStream, topic)
+		valid, err := s.isTopicValid(offer, subscriber.Stream, topic)
 		if err != nil {
 			log.Printf("failed to send error to client: %+v\n", err)
 
@@ -138,7 +140,7 @@ func (s *Server) addClientTopicsToEventSources(offer *Offer, sendStream quic.Sen
 		}
 
 		if valid {
-			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, sendStream)
+			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, subscriber)
 			s.Metrics.IncSubscriber(topic)
 		}
 	}
@@ -170,7 +172,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), []quic.SendStream{}, s.Metrics)
+			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics)
 
 			go s.EventSources[topic].TransferEvents(s.Worker)
 		}
