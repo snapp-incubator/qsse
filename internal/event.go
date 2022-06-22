@@ -12,11 +12,13 @@ import (
 
 // EventSource is a struct for topic channel and its subscribers.
 type EventSource struct {
-	Topic       string
-	DataChannel chan []byte
-	Subscribers []Subscriber
-	Metrics     Metrics
-	Cleaning    *atomic.Bool
+	Topic                 string
+	DataChannel           chan []byte
+	Subscribers           []Subscriber
+	IncomingSubscribers   chan Subscriber
+	SubscriberWaitingList []Subscriber
+	Metrics               Metrics
+	Cleaning              *atomic.Bool
 }
 
 type Event struct {
@@ -31,11 +33,13 @@ func NewEventSource(
 	metric Metrics,
 ) *EventSource {
 	return &EventSource{
-		Topic:       topic,
-		DataChannel: dataChannel,
-		Subscribers: subscribers,
-		Metrics:     metric,
-		Cleaning:    atomic.NewBool(false),
+		Topic:                 topic,
+		DataChannel:           dataChannel,
+		Subscribers:           subscribers,
+		IncomingSubscribers:   make(chan Subscriber),
+		SubscriberWaitingList: make([]Subscriber, 0),
+		Metrics:               metric,
+		Cleaning:              atomic.NewBool(false),
 	}
 }
 
@@ -69,9 +73,20 @@ func (e *EventSource) CleanCorruptSubscribers() {
 			log.Printf("cleaned %d corrupt subscribers\n", diff)
 		}
 
-		e.Subscribers = e.Subscribers[:i]
+		e.Subscribers = append(e.Subscribers[:i], e.SubscriberWaitingList...)
+		e.SubscriberWaitingList = make([]Subscriber, 0)
 
 		e.Cleaning.Store(false)
+	}
+}
+
+func (e *EventSource) HandleNewSubscriber() {
+	for subscriber := range e.IncomingSubscribers {
+		if e.Cleaning.Load() {
+			e.SubscriberWaitingList = append(e.SubscriberWaitingList, subscriber)
+		} else {
+			e.Subscribers = append(e.Subscribers, subscriber)
+		}
 	}
 }
 
