@@ -59,7 +59,7 @@ func (e *EventSource) DistributeEvents(worker Worker) {
 }
 
 func (e *EventSource) CleanCorruptSubscribers() {
-	for _ = range time.Tick(e.CleaningInterval) {
+	for range time.Tick(e.CleaningInterval) {
 		e.Cleaning.Store(true)
 
 		i := 0

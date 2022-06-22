@@ -11,6 +11,15 @@ import (
 	"github.com/snapp-incubator/qsse/internal"
 )
 
+var DefCleaningInterval = 10 * time.Second //nolint:gochecknoglobals
+
+const (
+	DefClientAcceptorCount       = 1
+	DefClientAcceptorQueueSize   = 1
+	DefEventDistributorCount     = 1
+	DefEVentDistributorQueueSize = 10
+)
+
 type ServerConfig struct {
 	Metric    *MetricConfig
 	TLSConfig *tls.Config
@@ -85,11 +94,11 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 			},
 			TLSConfig: GetDefaultTLSConfig(),
 			Worker: &WorkerConfig{
-				CleaningInterval:          10 * time.Second,
-				ClientAcceptorCount:       1,
-				ClientAcceptorQueueSize:   1,
-				EventDistributorCount:     1,
-				EventDistributorQueueSize: 10,
+				CleaningInterval:          DefCleaningInterval,
+				ClientAcceptorCount:       DefClientAcceptorCount,
+				ClientAcceptorQueueSize:   DefClientAcceptorQueueSize,
+				EventDistributorCount:     DefEventDistributorCount,
+				EventDistributorQueueSize: DefEVentDistributorQueueSize,
 			},
 		}
 	}
@@ -106,11 +115,11 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 
 	if cfg.Worker == nil {
 		cfg.Worker = &WorkerConfig{
-			CleaningInterval:          10 * time.Second,
-			ClientAcceptorCount:       1,
-			ClientAcceptorQueueSize:   1,
-			EventDistributorCount:     1,
-			EventDistributorQueueSize: 10,
+			CleaningInterval:          DefCleaningInterval,
+			ClientAcceptorCount:       DefClientAcceptorCount,
+			ClientAcceptorQueueSize:   DefClientAcceptorQueueSize,
+			EventDistributorCount:     DefEventDistributorCount,
+			EventDistributorQueueSize: DefEVentDistributorQueueSize,
 		}
 	}
 

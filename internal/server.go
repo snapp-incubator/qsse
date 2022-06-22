@@ -146,7 +146,13 @@ func (s *Server) GenerateEventSources(topics []string) {
 	for _, topic := range topics {
 		if _, ok := s.EventSources[topic]; !ok {
 			log.Printf("creating new event source for topic %s", topic)
-			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics, s.CleaningInterval)
+			s.EventSources[topic] = NewEventSource(
+				topic,
+				make(chan []byte),
+				make([]Subscriber, 0),
+				s.Metrics,
+				s.CleaningInterval,
+			)
 
 			go s.EventSources[topic].DistributeEvents(s.Worker)
 			go s.EventSources[topic].CleanCorruptSubscribers()
