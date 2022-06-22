@@ -98,39 +98,39 @@ func (s *Server) AcceptClients() {
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
 func (s *Server) handleClient(connection quic.Connection) {
-	client, err := NewSubscriber(connection)
+	offer, err := AcceptOffer(connection)
 	if err != nil {
 		log.Printf("failed to handle new subscriber: %+v\n", err)
 
 		return
 	}
 
-	isValid := s.Authenticator.Authenticate(client.Token)
+	isValid := s.Authenticator.Authenticate(offer.Token)
 	if !isValid {
 		log.Println("client is not valid")
 
-		CloseClientConnection(client.connection, CodeNotAuthorized, ErrNotAuthorized)
+		CloseClientConnection(connection, CodeNotAuthorized, ErrNotAuthorized)
 
 		return
 	}
 
 	log.Println("client is authenticated")
 
-	sendStream, err := client.connection.OpenUniStream()
+	sendStream, err := connection.OpenUniStream()
 	if err != nil {
 		log.Printf("failed to open send stream to client: %+v\n", err)
-		CloseClientConnection(client.connection, CodeUnknown, err)
+		CloseClientConnection(connection, CodeUnknown, err)
 
 		return
 	}
 
-	s.addClientTopicsToEventSources(client, sendStream)
+	s.addClientTopicsToEventSources(offer, sendStream)
 }
 
 // addClientTopicsToEventSources adds the client's sendStream to the eventSources.
-func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream quic.SendStream) {
-	for _, topic := range client.Topics {
-		valid, err := s.isTopicValid(client, sendStream, topic)
+func (s *Server) addClientTopicsToEventSources(offer *Offer, sendStream quic.SendStream) {
+	for _, topic := range offer.Topics {
+		valid, err := s.isTopicValid(offer, sendStream, topic)
 		if err != nil {
 			log.Printf("failed to send error to client: %+v\n", err)
 
@@ -145,7 +145,7 @@ func (s *Server) addClientTopicsToEventSources(client *Subscriber, sendStream qu
 }
 
 // isTopicValid check whether topic exists and client is authorized on it or not.
-func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, topic string) (bool, error) {
+func (s *Server) isTopicValid(offer *Offer, sendStream quic.SendStream, topic string) (bool, error) {
 	if _, ok := s.EventSources[topic]; !ok {
 		log.Printf("topic doesn't exists: %s\n", topic)
 
@@ -154,7 +154,7 @@ func (s *Server) isTopicValid(client *Subscriber, sendStream quic.SendStream, to
 		return false, err
 	}
 
-	if !s.Authorizer.Authorize(client.Token, topic) {
+	if !s.Authorizer.Authorize(offer.Token, topic) {
 		log.Printf("client is not authorized for topic: %s", topic)
 
 		err := SendError(sendStream, NewErr(CodeNotAuthorized, map[string]any{"topic": topic}))
