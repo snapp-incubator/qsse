@@ -37,7 +37,7 @@ func NewEvent(topic string, data []byte) *Event {
 func (receiver *EventSource) TransferEvents(worker Worker) {
 	for event := range receiver.DataChannel {
 		work := NewSubscribeWork(event, receiver)
-		worker.SubscribePool.Process(work)
+		worker.AddDistributeWork(work)
 	}
 }
 
