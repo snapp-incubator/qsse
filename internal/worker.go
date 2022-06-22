@@ -35,20 +35,18 @@ func NewWorker() Worker {
 		event := NewEvent(topic, eventData)
 
 		eventSource.Metrics.IncDistributeEvent()
-
-		i := 0
+		eventSource.Metrics.DecEvent(topic)
 		for _, subscriber := range eventSource.Subscribers {
-			err := WriteData(event, subscriber.Stream)
-			eventSource.Metrics.DecEvent(topic)
-			if err != nil {
+			if subscriber.Corrupt.Load() {
+				continue
+			}
+
+			if err := WriteData(event, subscriber.Stream); err != nil {
 				log.Printf("err while sending event to client: %s", err.Error())
+				subscriber.Corrupt.Store(true)
 				eventSource.Metrics.DecSubscriber(topic)
-			} else {
-				eventSource.Subscribers[i] = subscriber
-				i++
 			}
 		}
-		eventSource.Subscribers = eventSource.Subscribers[:i]
 
 		return nil
 	})
