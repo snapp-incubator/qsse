@@ -175,6 +175,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics)
 
 			go s.EventSources[topic].DistributeEvents(s.Worker)
+			go s.EventSources[topic].CleanCorruptSubscribers()
 		}
 	}
 }

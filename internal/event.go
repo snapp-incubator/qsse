@@ -3,8 +3,11 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/atomic"
 )
 
 // EventSource is a struct for topic channel and its subscribers.
@@ -13,6 +16,7 @@ type EventSource struct {
 	DataChannel chan []byte
 	Subscribers []Subscriber
 	Metrics     Metrics
+	Cleaning    *atomic.Bool
 }
 
 type Event struct {
@@ -26,7 +30,13 @@ func NewEventSource(
 	subscribers []Subscriber,
 	metric Metrics,
 ) *EventSource {
-	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers, Metrics: metric}
+	return &EventSource{
+		Topic:       topic,
+		DataChannel: dataChannel,
+		Subscribers: subscribers,
+		Metrics:     metric,
+		Cleaning:    atomic.NewBool(false),
+	}
 }
 
 func NewEvent(topic string, data []byte) *Event {
@@ -38,6 +48,30 @@ func (e *EventSource) DistributeEvents(worker Worker) {
 	for event := range e.DataChannel {
 		work := NewSubscribeWork(event, e)
 		worker.AddDistributeWork(work)
+	}
+}
+
+func (e *EventSource) CleanCorruptSubscribers() {
+	for _ = range time.Tick(1 * time.Second) {
+		e.Cleaning.Store(true)
+
+		i := 0
+
+		for _, subscriber := range e.Subscribers {
+			if !subscriber.Corrupt.Load() {
+				e.Subscribers[i] = subscriber
+				i++
+			}
+		}
+
+		diff := len(e.Subscribers) - i
+		if diff > 0 {
+			log.Printf("cleaned %d corrupt subscribers\n", diff)
+		}
+
+		e.Subscribers = e.Subscribers[:i]
+
+		e.Cleaning.Store(false)
 	}
 }
 
