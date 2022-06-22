@@ -41,8 +41,9 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	}
 
 	metric := internal.NewMetrics(config.Metric.NameSpace)
+	worker := internal.NewWorker()
 	server := internal.Server{
-		Worker:        internal.NewWorker(),
+		Worker:        worker,
 		Listener:      listener,
 		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
 		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
@@ -53,7 +54,7 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 
 	server.GenerateEventSources(topics)
 
-	go server.AcceptClients()
+	worker.AddAcceptClientWork(&server, 5)
 
 	return &server, nil
 }

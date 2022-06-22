@@ -1,11 +1,9 @@
 package internal
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
-	"runtime"
 
 	"github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -68,31 +66,6 @@ func (s *Server) SetAuthorizer(authorizer auth.Authorizer) {
 // SetAuthenticatorFunc replaces the authentication function.
 func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
-}
-
-// AcceptClients accepts clients and do the following steps.
-// 1. Accept a receivedStream.
-// 2. Read client authentication token and topics.
-// 3. Authenticate the client.
-// 3.1 If the authentication is successful, opens sendStream for each topic and add them to eventSources.
-// 3.2 If the authentication is not successful, closes the connection.
-func (s *Server) AcceptClients() {
-	runtime.LockOSThread()
-
-	for {
-		background := context.Background()
-
-		connection, err := s.Listener.Accept(background)
-		if err != nil {
-			log.Printf("failed to accept new client: %+v\n", err)
-
-			continue
-		}
-
-		log.Println("found a new client")
-
-		go s.handleClient(connection)
-	}
 }
 
 // handleClient authenticate client and If the authentication is successful,
