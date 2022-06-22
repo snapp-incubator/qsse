@@ -140,7 +140,7 @@ func (s *Server) addClientTopicsToEventSources(offer *Offer, subscriber Subscrib
 		}
 
 		if valid {
-			s.EventSources[topic].Subscribers = append(s.EventSources[topic].Subscribers, subscriber)
+			s.EventSources[topic].IncomingSubscribers <- subscriber
 			s.Metrics.IncSubscriber(topic)
 		}
 	}
