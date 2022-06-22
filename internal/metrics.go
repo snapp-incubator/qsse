@@ -18,30 +18,16 @@ func NewMetrics(namespace string) Metrics {
 	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
-		Name:      "topic_event_count",
+		Name:      "event_count_total",
 		Help:      "count of events in eventsource",
 	}, []string{"topic"})
 
 	metric.SubscriberCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
 		Subsystem: "qsse",
-		Name:      "topic_subscriber_count",
+		Name:      "subscriber_count_total",
 		Help:      "count of topic's subscribers",
 	}, []string{"topic"})
-
-	metric.PublishCounter = promauto.NewCounter(prometheus.CounterOpts{ //nolint:exhaustruct
-		Namespace: namespace,
-		Subsystem: "qsse",
-		Name:      "event_publish_total",
-		Help:      "count total success published events",
-	})
-
-	metric.DistributeCounter = promauto.NewCounter(prometheus.CounterOpts{ //nolint:exhaustruct
-		Namespace: namespace,
-		Subsystem: "qsse",
-		Name:      "event_distribute_total",
-		Help:      "count total success distributed events",
-	})
 
 	return metric
 }
@@ -68,12 +54,4 @@ func (m Metrics) DecSubscriber(topic string) {
 	m.SubscriberCounter.With(map[string]string{
 		"topic": topic,
 	}).Dec()
-}
-
-func (m Metrics) IncPublishEvent() {
-	m.PublishCounter.Inc()
-}
-
-func (m Metrics) IncDistributeEvent() {
-	m.DistributeCounter.Inc()
 }

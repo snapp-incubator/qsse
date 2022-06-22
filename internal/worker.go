@@ -75,7 +75,6 @@ func distributeWork(work any) any {
 	eventSource := data.EventSource
 	event := NewEvent(topic, eventData)
 
-	eventSource.Metrics.IncDistributeEvent()
 	eventSource.Metrics.DecEvent(topic)
 
 	for _, subscriber := range eventSource.Subscribers {
