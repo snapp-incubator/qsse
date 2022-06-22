@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/snapp-incubator/qsse"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func subscribe(clientID int, topics []string) {
 		panic(err)
 	}
 
-	client.SetMessageHandler(func(topic string, message []byte, l *zap.Logger) {
+	client.SetMessageHandler(func(topic string, message []byte) {
 		fmt.Printf("client-%d %s: %s\n", clientID, topic, message)
 	})
 
