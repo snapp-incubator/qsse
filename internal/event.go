@@ -33,10 +33,10 @@ func NewEvent(topic string, data []byte) *Event {
 	return &Event{Topic: topic, Data: data}
 }
 
-// TransferEvents distribute events from channel between subscribers.
-func (receiver *EventSource) TransferEvents(worker Worker) {
-	for event := range receiver.DataChannel {
-		work := NewSubscribeWork(event, receiver)
+// DistributeEvents distribute events from channel between subscribers.
+func (e *EventSource) DistributeEvents(worker Worker) {
+	for event := range e.DataChannel {
+		work := NewSubscribeWork(event, e)
 		worker.AddDistributeWork(work)
 	}
 }

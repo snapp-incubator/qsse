@@ -174,7 +174,7 @@ func (s *Server) GenerateEventSources(topics []string) {
 			log.Printf("creating new event source for topic %s", topic)
 			s.EventSources[topic] = NewEventSource(topic, make(chan []byte), make([]Subscriber, 0), s.Metrics)
 
-			go s.EventSources[topic].TransferEvents(s.Worker)
+			go s.EventSources[topic].DistributeEvents(s.Worker)
 		}
 	}
 }
