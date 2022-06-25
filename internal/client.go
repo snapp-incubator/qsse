@@ -6,12 +6,15 @@ import (
 	"log"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/zap"
 )
 
 type Client struct {
 	Connection quic.Connection
 	Token      string
 	Topics     []string
+	Logger     *zap.Logger
+	Finder     Finder
 
 	OnEvent   map[string]func(event []byte)
 	OnMessage func(topic string, message []byte)
@@ -20,13 +23,13 @@ type Client struct {
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
 var DefaultOnMessage = func(topic string, message []byte) { //nolint:gochecknoglobals
-	log.Printf("topic: %s\ndata: %s\n", topic, string(message))
+	log.Printf("topic: %s, message: %s\n", topic, string(message))
 }
 
 // DefaultOnError Default handler for processing errors.
 // it listen to topic "error".
 var DefaultOnError = func(code int, data map[string]any) { //nolint:gochecknoglobals
-	log.Printf("Error: %d - %+v\n", code, data)
+	log.Printf("code: %d, data: %v", code, data)
 }
 
 // AcceptEvents reads events from the stream and calls the proper handler.
@@ -38,23 +41,26 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 	for {
 		bytes, err := reader.ReadBytes(DELIMITER)
 		if err != nil {
-			log.Fatalf("failed to read event: %+v", err)
+			c.Logger.Fatal("failed to read event", zap.Error(err))
 		}
 
 		var event Event
 		if err = json.Unmarshal(bytes, &event); err != nil {
-			log.Printf("failed to unmarshal event: %+v\n", err)
+			c.Logger.Error("failed to unmarshal event", zap.Error(err))
 
 			continue
 		}
 
 		switch {
 		case event.Topic == ErrorTopic:
-			err := UnmarshalError(event.Data)
+			err, e := UnmarshalError(event.Data)
+			if e != nil {
+				c.Logger.Error("error in unmarshalling", zap.Error(e))
+			}
 
 			c.OnError(err.Code, err.Data)
 		default:
-			topics := FindRelatedWildcardTopics(event.Topic, c.Topics)
+			topics := c.Finder.FindRelatedWildcardTopics(event.Topic, c.Topics)
 
 			if len(topics) > 0 {
 				for _, topic := range topics {
@@ -78,7 +84,7 @@ func (c *Client) SetEventHandler(topic string, handler func([]byte)) {
 		c.Topics = AppendIfMissing(c.Topics, topic)
 		c.OnEvent[topic] = handler
 	} else {
-		log.Printf("topic is not valid")
+		c.Logger.Error("topic is not valid")
 	}
 }
 

@@ -3,7 +3,6 @@ package internal
 import (
 	"encoding/json"
 	"errors"
-	"log"
 )
 
 type Error struct {
@@ -36,15 +35,16 @@ func NewErr(code int, data map[string]any) *Error {
 	}
 }
 
-func UnmarshalError(bytes []byte) Error {
-	var e Error
+func UnmarshalError(bytes []byte) (Error, error) {
+	var (
+		e   Error
+		err error
+	)
 
-	if err := json.Unmarshal(bytes, &e); err != nil {
-		log.Printf("failed to unmarshal error: %+v\n", err)
-
+	if err = json.Unmarshal(bytes, &e); err != nil {
 		e.Code = CodeUnknown
 		e.Data = make(map[string]any)
 	}
 
-	return e
+	return e, err
 }

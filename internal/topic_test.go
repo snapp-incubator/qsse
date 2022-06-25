@@ -71,10 +71,14 @@ func TestFindTopicsList(t *testing.T) {
 		},
 	}
 
+	f := internal.Finder{
+		Logger: internal.NewLogger().Named("topic-finder"),
+	}
+
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := internal.FindTopicsList(testCase.topics, testCase.pattern)
+			result := f.FindTopicsList(testCase.topics, testCase.pattern)
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 
@@ -108,10 +112,14 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 		},
 	}
 
+	f := internal.Finder{
+		Logger: internal.NewLogger().Named("topic-finder"),
+	}
+
 	for _, test := range tests {
 		testCase := test
 		t.Run(test.name, func(t *testing.T) {
-			result := internal.FindRelatedWildcardTopics(
+			result := f.FindRelatedWildcardTopics(
 				testCase.topic,
 				testCase.topics,
 			)
