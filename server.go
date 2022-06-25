@@ -66,8 +66,8 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	}
 
 	metric := internal.NewMetrics(config.Metric.NameSpace)
-	worker := internal.NewWorker(workerConfig, l.Named("worker"))
 	l := internal.NewLogger().Named("server")
+	worker := internal.NewWorker(workerConfig, l.Named("worker"))
 	server := internal.Server{
 		Worker:        worker,
 		Listener:      listener,

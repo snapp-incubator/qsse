@@ -53,7 +53,7 @@ func NewEvent(topic string, data []byte) *Event {
 // DistributeEvents distribute events from channel between subscribers.
 func (e *EventSource) DistributeEvents(worker Worker) {
 	for event := range e.DataChannel {
-		work := NewSubscribeWork(event, e)
+		work := NewDistributeWork(event, e)
 		worker.AddDistributeWork(work)
 	}
 }

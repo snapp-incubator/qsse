@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"log"
 	"runtime"
 
 	"github.com/mehditeymorian/koi"
@@ -14,7 +15,8 @@ const (
 )
 
 type Worker struct {
-	Pond *koi.Pond
+	Pond   *koi.Pond
+	Logger *zap.Logger
 }
 
 type WorkerConfig struct {
@@ -27,28 +29,30 @@ type WorkerConfig struct {
 func NewWorker(cfg WorkerConfig, l *zap.Logger) Worker {
 	var worker Worker
 
+	worker.Logger = l
+
 	pond := koi.NewPond()
 	worker.Pond = pond
 
-	registerWorkers(pond, cfg)
+	worker.registerWorkers(cfg)
 
 	return worker
 }
 
-func registerWorkers(pond *koi.Pond, cfg WorkerConfig) {
+func (w *Worker) registerWorkers(cfg WorkerConfig) {
 	distributeWorker := koi.Worker{
 		QueueSize:       cfg.EventDistributorQueueSize,
 		ConcurrentCount: cfg.EventDistributorCount,
-		Work:            distributeWork,
+		Work:            w.distributeWork,
 	}
-	_ = pond.RegisterWorker(DistributeEvent, distributeWorker)
+	_ = w.Pond.RegisterWorker(DistributeEvent, distributeWorker)
 
 	acceptClientWorker := koi.Worker{
 		QueueSize:       cfg.ClientAcceptorQueueSize,
 		ConcurrentCount: cfg.ClientAcceptorCount,
-		Work:            acceptClientWork,
+		Work:            w.acceptClientWork,
 	}
-	_ = pond.RegisterWorker(AcceptClient, acceptClientWorker)
+	_ = w.Pond.RegisterWorker(AcceptClient, acceptClientWorker)
 }
 
 // ---------------------------------------------------------------
@@ -58,14 +62,14 @@ type DistributeWork struct {
 	EventSource *EventSource
 }
 
-func NewSubscribeWork(event []byte, eventSource *EventSource) *DistributeWork {
+func NewDistributeWork(event []byte, eventSource *EventSource) *DistributeWork {
 	return &DistributeWork{Event: event, EventSource: eventSource}
 }
 
-func distributeWork(work any) any {
+func (w *Worker) distributeWork(work any) any {
 	data, ok := work.(*DistributeWork)
 	if !ok {
-		log.Println("Worker: invalid work input")
+		w.Logger.Warn("Worker: invalid work input")
 
 		return nil
 	}
@@ -83,7 +87,7 @@ func distributeWork(work any) any {
 		}
 
 		if err := WriteData(event, subscriber.Stream); err != nil {
-			log.Printf("err while sending event to client: %s", err.Error())
+			w.Logger.Warn("err while sending event to client", zap.Error(err))
 			subscriber.Corrupt.Store(true)
 		}
 	}
@@ -106,7 +110,7 @@ func (w *Worker) AddDistributeWork(work *DistributeWork) {
 // 3. Authenticate the client.
 // 3.1 If the authentication is successful, opens sendStream for each topic and add them to eventSources.
 // 3.2 If the authentication is not successful, closes the connection.
-func acceptClientWork(work any) any {
+func (w *Worker) acceptClientWork(work any) any {
 	runtime.LockOSThread()
 
 	server, ok := work.(*Server)
@@ -119,12 +123,12 @@ func acceptClientWork(work any) any {
 
 		connection, err := server.Listener.Accept(background)
 		if err != nil {
-			log.Printf("failed to accept new client: %+v\n", err)
+			w.Logger.Warn("failed to accept new client", zap.Error(err))
 
 			continue
 		}
 
-		log.Println("found a new client")
+		w.Logger.Info("found a new client")
 
 		go server.handleClient(connection)
 	}
