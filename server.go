@@ -66,15 +66,20 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 	}
 
 	metric := internal.NewMetrics(config.Metric.NameSpace)
-	worker := internal.NewWorker(workerConfig)
+	worker := internal.NewWorker(workerConfig, l.Named("worker"))
+	l := internal.NewLogger().Named("server")
 	server := internal.Server{
-		Worker:           worker,
-		Listener:         listener,
-		Authenticator:    auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
-		Authorizer:       auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
-		EventSources:     make(map[string]*internal.EventSource),
-		Topics:           topics,
-		Metrics:          metric,
+		Worker:        worker,
+		Listener:      listener,
+		Authenticator: auth.AuthenticatorFunc(internal.DefaultAuthenticationFunc),
+		Authorizer:    auth.AuthorizerFunc(internal.DefaultAuthorizationFunc),
+		EventSources:  make(map[string]*internal.EventSource),
+		Topics:        topics,
+		Metrics:       metric,
+		Finder: internal.Finder{
+			Logger: l.Named("finder"),
+		},
+		Logger:           l,
 		CleaningInterval: config.Worker.CleaningInterval,
 	}
 

@@ -2,10 +2,10 @@ package internal
 
 import (
 	"context"
-	"log"
 	"runtime"
 
 	"github.com/mehditeymorian/koi"
+	"go.uber.org/zap"
 )
 
 const (
@@ -24,7 +24,7 @@ type WorkerConfig struct {
 	EventDistributorQueueSize int
 }
 
-func NewWorker(cfg WorkerConfig) Worker {
+func NewWorker(cfg WorkerConfig, l *zap.Logger) Worker {
 	var worker Worker
 
 	pond := koi.NewPond()
