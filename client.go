@@ -20,9 +20,9 @@ const (
 type Client interface {
 	SetEventHandler(topic string, handler func([]byte))
 
-	SetErrorHandler(handler func(code int, data map[string]any, l *zap.Logger))
+	SetErrorHandler(handler func(code int, data map[string]any))
 
-	SetMessageHandler(handler func(topic string, event []byte, l *zap.Logger))
+	SetMessageHandler(handler func(topic string, event []byte))
 }
 
 type ClientConfig struct {
