@@ -11,6 +11,11 @@ const (
 	sep = '.'
 )
 
+// Finder for topics
+type Finder struct {
+	Logger *zap.Logger
+}
+
 // TopicHasWildcard checks if the topic is a wildcard.
 func TopicHasWildcard(topic string) bool {
 	for i, c := range topic {
@@ -26,7 +31,7 @@ func TopicHasWildcard(topic string) bool {
 }
 
 // FindTopicsList find topics that match the topic pattern.
-func FindTopicsList(topics []string, pattern string, l *zap.Logger) []string {
+func (f *Finder) FindTopicsList(topics []string, pattern string) []string {
 	var matchedTopics []string
 
 	for _, topic := range topics {
@@ -34,7 +39,7 @@ func FindTopicsList(topics []string, pattern string, l *zap.Logger) []string {
 		if ok {
 			matchedTopics = append(matchedTopics, topic)
 		} else if err != nil {
-			l.Warn("error in topic matching")
+			f.Logger.Warn("error in topic matching")
 		}
 	}
 
@@ -42,7 +47,7 @@ func FindTopicsList(topics []string, pattern string, l *zap.Logger) []string {
 }
 
 // FindRelatedWildcardTopics find topics patterns that are applicable to the given topic.
-func FindRelatedWildcardTopics(topic string, topics []string, l *zap.Logger) []string {
+func (f *Finder) FindRelatedWildcardTopics(topic string, topics []string) []string {
 	var matchedTopics []string
 
 	for _, pattern := range topics {
@@ -50,7 +55,7 @@ func FindRelatedWildcardTopics(topic string, topics []string, l *zap.Logger) []s
 		if ok {
 			matchedTopics = append(matchedTopics, pattern)
 		} else if err != nil {
-			l.Warn("error in topic matching")
+			f.Logger.Warn("error in topic matching")
 		}
 	}
 
