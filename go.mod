@@ -7,7 +7,7 @@ require (
 	github.com/go-errors/errors v1.4.2
 	github.com/lucas-clemente/quic-go v0.27.2
 	github.com/prometheus/client_golang v1.12.2
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.4
 	github.com/tchap/zapext/v2 v2.1.1
 	go.uber.org/zap v1.21.0
 )
