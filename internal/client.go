@@ -13,6 +13,7 @@ type Client struct {
 	Token      string
 	Topics     []string
 	Logger     *zap.Logger
+	Finder     Finder
 
 	OnEvent   map[string]func(event []byte)
 	OnMessage func(topic string, message []byte)
@@ -55,7 +56,7 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 
 			c.OnError(err.Code, err.Data)
 		default:
-			topics := FindRelatedWildcardTopics(event.Topic, c.Topics, c.Logger.Named("topic"))
+			topics := c.Finder.FindRelatedWildcardTopics(event.Topic, c.Topics)
 
 			if len(topics) > 0 {
 				for _, topic := range topics {

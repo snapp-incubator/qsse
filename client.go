@@ -69,10 +69,13 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 		Connection: connection,
 		Token:      processedConfig.Token,
 		Topics:     topics,
-		OnEvent:    make(map[string]func([]byte)),
-		OnMessage:  internal.DefaultOnMessage,
-		OnError:    internal.DefaultOnError,
-		Logger:     l.Named("client"),
+		Finder: internal.Finder{
+			Logger: l.Named("finder"),
+		},
+		OnEvent:   make(map[string]func([]byte)),
+		OnMessage: internal.DefaultOnMessage,
+		OnError:   internal.DefaultOnError,
+		Logger:    l.Named("client"),
 	}
 
 	offer := internal.NewOffer(processedConfig.Token, topics)
