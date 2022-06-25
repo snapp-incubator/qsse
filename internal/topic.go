@@ -11,7 +11,7 @@ const (
 	sep = '.'
 )
 
-// Finder for topics
+// Finder for topics.
 type Finder struct {
 	Logger *zap.Logger
 }

@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type Error struct {
@@ -42,6 +43,7 @@ func UnmarshalError(bytes []byte) (Error, error) {
 	)
 
 	if err = json.Unmarshal(bytes, &e); err != nil {
+		err = fmt.Errorf("%w", err)
 		e.Code = CodeUnknown
 		e.Data = make(map[string]any)
 	}

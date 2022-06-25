@@ -3,6 +3,7 @@ package internal
 import (
 	"bufio"
 	"encoding/json"
+	"log"
 
 	"github.com/lucas-clemente/quic-go"
 	"go.uber.org/zap"
@@ -22,13 +23,13 @@ type Client struct {
 
 // DefaultOnMessage Default handler for processing incoming events without a handler.
 var DefaultOnMessage = func(topic string, message []byte) { //nolint:gochecknoglobals
-
+	log.Printf("topic: %s, message: %s\n", topic, string(message))
 }
 
 // DefaultOnError Default handler for processing errors.
 // it listen to topic "error".
 var DefaultOnError = func(code int, data map[string]any) { //nolint:gochecknoglobals
-
+	log.Printf("code: %d, data: %v", code, data)
 }
 
 // AcceptEvents reads events from the stream and calls the proper handler.
