@@ -11,9 +11,8 @@ import (
 	"github.com/snapp-incubator/qsse/internal"
 )
 
-var DefCleaningInterval = 10 * time.Second //nolint:gochecknoglobals
-
 const (
+	DefCleaningInterval          = 10 * time.Second
 	DefClientAcceptorCount       = 1
 	DefClientAcceptorQueueSize   = 1
 	DefEventDistributorCount     = 1
