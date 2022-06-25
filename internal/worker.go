@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"log"
 	"runtime"
 
 	"github.com/mehditeymorian/koi"
@@ -98,7 +97,7 @@ func (w *Worker) distributeWork(work any) any {
 func (w *Worker) AddDistributeWork(work *DistributeWork) {
 	_, err := w.Pond.AddWork(DistributeEvent, work)
 	if err != nil {
-		log.Printf("failed to add distribute work: %v\n", err)
+		w.Logger.Error("failed to add distribute work", zap.Error(err))
 	}
 }
 
@@ -123,7 +122,7 @@ func (w *Worker) acceptClientWork(work any) any {
 
 		connection, err := server.Listener.Accept(background)
 		if err != nil {
-			w.Logger.Warn("failed to accept new client", zap.Error(err))
+			w.Logger.Error("failed to accept new client", zap.Error(err))
 
 			continue
 		}
@@ -134,11 +133,11 @@ func (w *Worker) acceptClientWork(work any) any {
 	}
 }
 
-func (w Worker) AddAcceptClientWork(server *Server, count int) {
+func (w *Worker) AddAcceptClientWork(server *Server, count int) {
 	for i := 0; i < count; i++ {
 		_, err := w.Pond.AddWork(AcceptClient, server)
 		if err != nil {
-			log.Printf("failed to add accept client work: %v\n", err)
+			w.Logger.Error("failed to add accept client work", zap.Error(err))
 		}
 	}
 }
