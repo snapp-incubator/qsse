@@ -22,6 +22,7 @@ type Server struct {
 	EventSources map[string]*EventSource
 	Topics       []string
 	Logger       *zap.Logger
+	Finder       Finder
 
 	Authenticator auth.Authenticator
 	Authorizer    auth.Authorizer
@@ -42,7 +43,7 @@ func DefaultAuthorizationFunc(token, topic string) bool {
 func (s *Server) Publish(topic string, event []byte) {
 	s.Metrics.IncPublishEvent()
 
-	matchedTopics := FindTopicsList(s.Topics, topic, s.Logger.Named("topic"))
+	matchedTopics := s.Finder.FindTopicsList(s.Topics, topic)
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
 			s.Metrics.IncEvent(matchedTopic)

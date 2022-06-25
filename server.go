@@ -50,7 +50,10 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		EventSources:  make(map[string]*internal.EventSource),
 		Topics:        topics,
 		Metrics:       metric,
-		Logger:        l,
+		Finder: internal.Finder{
+			Logger: l.Named("finder"),
+		},
+		Logger: l,
 	}
 
 	server.GenerateEventSources(topics)
