@@ -20,29 +20,8 @@ go get github.com/snapp-incubator/qsse
 ```
 
 ## Basic Usage
-```Go
-// Client
 
-import "github.com/snapp-incubator/qsse"
-
-func main() {
-    config := &qsse.ClientConfig{
-        Token:     "secret",
-        TLSConfig: nil,
-    }
-    topics := []string{"firstnames", "lastnames"}
-    
-    _, err := qsse.NewClient("localhost:4242", topics, config)
-    if err != nil {
-        panic(err)
-    }
-    
-    select {}
-}
-
-
-```
-
+### Server
 ```Go
 // Server
 
@@ -53,40 +32,103 @@ import (
 	"time"
 )
 
-var firstNames = []string{...}
-
-var lastNames = []string{...}
+var (
+    people = []Person{...}
+    accounts = []Account{...}
+) 
 
 func main() {
-	authenticateFunc := func(token string) bool {
-		log.Printf("Authenticating token: %s", token)
-		return token == "secret"
-	}
+	topics := []string{"people", "account"}
 
-	topics := []string{"firstnames", "lastnames"}
-
-	server, err := qsse.NewServer("localhost:4242", qsse.GetDefaultTLSConfig(), topics)
+	server, err := qsse.NewServer("localhost:4242", topics, nil)
 	if err != nil {
 		panic(err)
 	}
-	server.SetAuthentication(authenticateFunc)
 
-	go func() {
-		for {
-            if rand.NormFloat64() > 0.5 {
-                server.Publish("firstnames", RandomItem(firstNames))
-            } else {
-                server.Publish("lastnames", RandomItem(lastNames))
-            }
-			<-time.After(2 * time.Second)
-		}
-	}()
+	// publish events
+	server.Publish("people", people[0])
+	server.Publish("accounts", accounts[0])
+	// ...
 
-	select {}
+	// more code
 }
-
-func RandomItem(items []string) []byte {
-    return []byte(items[rand.Intn(len(items))])
-}
-
 ```
+
+### Client
+```Go
+import "github.com/snapp-incubator/qsse"
+
+func main() {
+    topics := []string{"people", "account"}
+    
+    client, err := qsse.NewClient("localhost:4242", topics, nil)
+    if err != nil {
+        panic(err)
+    }
+	
+    client.SetEventHandler("people", func(data []byte) {
+        // handle data on topic
+    })
+	
+    client.SetErrorHandler(func(code int, data map[string]any) { 
+        // handle different error
+    })
+    
+	// more code
+}
+```
+
+## Security
+By default, all the clients are accepted. Use Authentication to check is new clients are valid and use Authorization to check client access on each topic.
+```Go
+// authentication
+
+// func
+server.SetAuthenticatorFunc(func(token string) bool {
+
+})
+// interface
+server.SetAuthenticator()
+
+// authorization on each topic
+
+// func
+server.SetAuthorizerFunc(func(token, topic string) bool {
+
+})
+// interface
+server.SetAuthorizer()
+```
+
+## Topic Patterns
+topics can be separated by `.` logically. also `*` can be used as wildcard placeholder. for example these are valid topics 
+- `ride`
+- `ride.*.start`
+- `ride.passenger.*` 
+
+**Note**: Putting `*` at the end of topic will publish or subscribe to every topic that start with `*` prefix. For example `ride.passenger.*` is equivalent of subscribing to `ride.passenger.start`, `ride.passenger.account.name`, and so on.
+
+## Server Configurations
+| config                                 	 | description                                                                                   	| default                        	|
+|------------------------------------------|-----------------------------------------------------------------------------------------------	|--------------------------------	|
+| Metric.namespace, <br>Metric.subsystem 	 | namespace and subsystem parameters of the Prometheus metrics                                  	| "qsse",<br>"qsse"              	|
+| TLSConfig                              	 | TLS config of server                                                                          	| qsse.GetDefaultTLSConfig<br>() 	|
+| Worker.CleaningInterval                	 | interval between cleaning idle clients                                                        	| 10 sec                         	|
+| Worker.ClientAcceptorCount             	 | number of Goroutine accepting new clients                                                     	| 1                              	|
+| Worker.ClientAcceptorQueueSize         	 | queue size of client acceptors. (this is usually equal to `clientAcceptorCount`)              	| 1                              	|
+| Worker.EventDistributorCount           	 | number of concurrent goroutine distributing events to subscribers for each EventSource[topic] 	| 1                              	|
+| Worker.EventDistributorQueueSize       	 | queue size of event distribution work                                                         	| 10                             	|
+
+## Client Configurations
+| config                        	| description                                                                                          	| default                 	|
+|-------------------------------	|------------------------------------------------------------------------------------------------------	|-------------------------	|
+| token                         	| token that will be send to server on the initial connection to verify the client.                    	| ""                      	|
+| TLSConfig                     	| TLS config of client                                                                                 	| qsse.GetSimpleTLS<br>() 	|
+| ReconnectPolicy.Retry         	| bool that indicate if client should retry connection if couldn't connect to server on the first try. 	| false                   	|
+| ReconnectPolicy.RetryTimes    	| number of reconnect times to connect.                                                                	| 5                       	|
+| ReconnectPolicy.RetryInterval 	| interval between reconnecting to server                                                              	| 5 sec                   	|
+
+## Examples
+- [Simple Client & Server](examples/simple)
+- [Topic Patterns](examples/topic-pattern)
+- [Multiple Generators](examples/multiple-generators)
