@@ -8,8 +8,6 @@ import (
 type Metrics struct {
 	EventCounter      *prometheus.GaugeVec
 	SubscriberCounter *prometheus.GaugeVec
-	PublishCounter    prometheus.Counter
-	DistributeCounter prometheus.Counter
 }
 
 func NewMetrics(namespace, subSystem string) Metrics {
