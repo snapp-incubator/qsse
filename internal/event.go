@@ -3,16 +3,23 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"go.uber.org/atomic"
 )
 
 // EventSource is a struct for topic channel and its subscribers.
 type EventSource struct {
-	Topic       string
-	DataChannel chan []byte
-	Subscribers []quic.SendStream
-	Metrics     Metrics
+	Topic                 string
+	DataChannel           chan []byte
+	Subscribers           []Subscriber
+	IncomingSubscribers   chan Subscriber
+	SubscriberWaitingList []Subscriber
+	Metrics               Metrics
+	Cleaning              *atomic.Bool
+	CleaningInterval      time.Duration
 }
 
 type Event struct {
@@ -23,21 +30,68 @@ type Event struct {
 func NewEventSource(
 	topic string,
 	dataChannel chan []byte,
-	subscribers []quic.SendStream,
+	subscribers []Subscriber,
 	metric Metrics,
+	cleaningInterval time.Duration,
 ) *EventSource {
-	return &EventSource{Topic: topic, DataChannel: dataChannel, Subscribers: subscribers, Metrics: metric}
+	return &EventSource{
+		Topic:                 topic,
+		DataChannel:           dataChannel,
+		Subscribers:           subscribers,
+		IncomingSubscribers:   make(chan Subscriber),
+		SubscriberWaitingList: make([]Subscriber, 0),
+		Metrics:               metric,
+		Cleaning:              atomic.NewBool(false),
+		CleaningInterval:      cleaningInterval,
+	}
 }
 
 func NewEvent(topic string, data []byte) *Event {
 	return &Event{Topic: topic, Data: data}
 }
 
-// TransferEvents distribute events from channel between subscribers.
-func (receiver *EventSource) TransferEvents(worker Worker) {
-	for event := range receiver.DataChannel {
-		work := NewSubscribeWork(event, receiver)
-		worker.SubscribePool.Process(work)
+// DistributeEvents distribute events from channel between subscribers.
+func (e *EventSource) DistributeEvents(worker Worker) {
+	for event := range e.DataChannel {
+		work := NewDistributeWork(event, e)
+		worker.AddDistributeWork(work)
+	}
+}
+
+func (e *EventSource) CleanCorruptSubscribers() {
+	for range time.Tick(e.CleaningInterval) {
+		e.Cleaning.Store(true)
+
+		i := 0
+
+		for _, subscriber := range e.Subscribers {
+			if subscriber.Corrupt.Load() {
+				e.Metrics.DecSubscriber(e.Topic)
+			} else {
+				e.Subscribers[i] = subscriber
+				i++
+			}
+		}
+
+		diff := len(e.Subscribers) - i
+		if diff > 0 {
+			log.Printf("cleaned %d corrupt subscribers\n", diff)
+		}
+
+		e.Subscribers = append(e.Subscribers[:i], e.SubscriberWaitingList...)
+		e.SubscriberWaitingList = make([]Subscriber, 0)
+
+		e.Cleaning.Store(false)
+	}
+}
+
+func (e *EventSource) HandleNewSubscriber() {
+	for subscriber := range e.IncomingSubscribers {
+		if e.Cleaning.Load() {
+			e.SubscriberWaitingList = append(e.SubscriberWaitingList, subscriber)
+		} else {
+			e.Subscribers = append(e.Subscribers, subscriber)
+		}
 	}
 }
 

@@ -3,12 +3,13 @@ module github.com/snapp-incubator/qsse
 go 1.18
 
 require (
-	github.com/Jeffail/tunny v0.1.4
 	github.com/go-errors/errors v1.4.2
 	github.com/lucas-clemente/quic-go v0.27.2
+	github.com/mehditeymorian/koi v1.0.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/stretchr/testify v1.7.4
 	github.com/tchap/zapext/v2 v2.1.1
+	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 )
 
@@ -31,11 +32,11 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/tools v0.1.9 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
