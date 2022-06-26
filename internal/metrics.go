@@ -12,20 +12,20 @@ type Metrics struct {
 	DistributeCounter prometheus.Counter
 }
 
-func NewMetrics(namespace string) Metrics {
+func NewMetrics(namespace, subSystem string) Metrics {
 	var metric Metrics
 
 	metric.EventCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
-		Subsystem: "qsse",
-		Name:      "event_count_total",
+		Subsystem: subSystem,
+		Name:      "event_count",
 		Help:      "count of events in eventsource",
 	}, []string{"topic"})
 
 	metric.SubscriberCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{ //nolint:exhaustruct
 		Namespace: namespace,
-		Subsystem: "qsse",
-		Name:      "subscriber_count_total",
+		Subsystem: subSystem,
+		Name:      "subscriber_count",
 		Help:      "count of topic's subscribers",
 	}, []string{"topic"})
 

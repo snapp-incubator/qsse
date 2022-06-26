@@ -34,7 +34,8 @@ type WorkerConfig struct {
 }
 
 type MetricConfig struct {
-	NameSpace string
+	Namespace string
+	Subsystem string
 }
 
 type Server interface {
@@ -65,7 +66,7 @@ func NewServer(address string, topics []string, config *ServerConfig) (Server, e
 		EventDistributorQueueSize: config.Worker.EventDistributorQueueSize,
 	}
 
-	metric := internal.NewMetrics(config.Metric.NameSpace)
+	metric := internal.NewMetrics(config.Metric.Namespace, config.Metric.Subsystem)
 	l := internal.NewLogger().Named("server")
 	worker := internal.NewWorker(workerConfig, l.Named("worker"))
 	server := internal.Server{
@@ -94,7 +95,8 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 	if cfg == nil {
 		return &ServerConfig{
 			Metric: &MetricConfig{
-				NameSpace: "qsse",
+				Namespace: "qsse",
+				Subsystem: "qsse",
 			},
 			TLSConfig: GetDefaultTLSConfig(),
 			Worker: &WorkerConfig{
@@ -109,7 +111,8 @@ func processServerConfig(cfg *ServerConfig) *ServerConfig {
 
 	if cfg.Metric == nil {
 		cfg.Metric = &MetricConfig{
-			NameSpace: "qsse",
+			Namespace: "qsse",
+			Subsystem: "qsse",
 		}
 	}
 
