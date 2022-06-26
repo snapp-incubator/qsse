@@ -14,7 +14,7 @@ import (
 
 const (
 	reconnectRetryNumber   = 5
-	reconnectRetryInterval = 5
+	reconnectRetryInterval = 5000
 )
 
 type Client interface {
