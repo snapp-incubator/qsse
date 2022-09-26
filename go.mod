@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/go-errors/errors v1.4.2
-	github.com/lucas-clemente/quic-go v0.29.0
+	github.com/lucas-clemente/quic-go v0.29.1
 	github.com/mehditeymorian/koi v1.0.1
 	github.com/prometheus/client_golang v1.13.0
 	github.com/stretchr/testify v1.8.0
