@@ -46,7 +46,7 @@ func main() {
 	server.Publish("accounts", accounts[0])
 	// ...
 
-	// more code
+	// some blocking code to keep the server up
 }
 ```
 
@@ -71,8 +71,8 @@ func main() {
     client.SetErrorHandler(func(code int, data map[string]any) { 
         // handle different error
     })
-    
-	// more code
+
+	// some blocking code to keep the client up for receiving the events
 }
 ```
 
