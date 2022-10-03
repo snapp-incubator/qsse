@@ -24,6 +24,7 @@ go get github.com/snapp-incubator/qsse
 ### Server
 ```Go
 // Server
+package main
 
 import "github.com/snapp-incubator/qsse"
 
