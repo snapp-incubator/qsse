@@ -25,12 +25,7 @@ go get github.com/snapp-incubator/qsse
 ```Go
 // Server
 
-import (
-	"github.com/snapp-incubator/qsse"
-	"log"
-	"math/rand"
-	"time"
-)
+import "github.com/snapp-incubator/qsse"
 
 var (
     people = []Person{...}
