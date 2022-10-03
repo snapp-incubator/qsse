@@ -52,6 +52,8 @@ func main() {
 
 ### Client
 ```Go
+package main
+
 import "github.com/snapp-incubator/qsse"
 
 func main() {
