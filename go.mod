@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/go-errors/errors v1.4.2
-	github.com/lucas-clemente/quic-go v0.29.1
+	github.com/lucas-clemente/quic-go v0.29.2
 	github.com/mehditeymorian/koi v1.0.1
 	github.com/prometheus/client_golang v1.13.0
 	github.com/stretchr/testify v1.8.0
@@ -21,8 +21,8 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/marten-seemann/qtls-go1-18 v0.1.2 // indirect
-	github.com/marten-seemann/qtls-go1-19 v0.1.0 // indirect
+	github.com/marten-seemann/qtls-go1-18 v0.1.3 // indirect
+	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
