@@ -7,7 +7,7 @@ require (
 	github.com/lucas-clemente/quic-go v0.31.1
 	github.com/mehditeymorian/koi v1.0.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/tchap/zapext/v2 v2.1.1
 	go.uber.org/atomic v1.10.0
 	go.uber.org/zap v1.24.0
