@@ -8,6 +8,11 @@ linters:
     # it should improve to support more known patterns
     - varnamelen  
     # deprecated linters
+    - varcheck
+    - deadcode
+    - nosnakecase
+    - ifshort
+    - structcheck
     - maligned
     - scopelint
     - golint
