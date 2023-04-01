@@ -11,7 +11,7 @@ linters:
     - varcheck
     - deadcode
     - nosnakecase
-    - if-return
+    - nestif
     - ifshort
     - structcheck
     - maligned
