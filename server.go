@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	"github.com/lucas-clemente/quic-go"
+	quic "github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 	"github.com/snapp-incubator/qsse/internal"
 )
@@ -54,7 +54,7 @@ type Server interface {
 func NewServer(address string, topics []string, config *ServerConfig) (Server, error) {
 	config = processServerConfig(config)
 
-	listener, err := quic.ListenAddr(address, config.TLSConfig, nil) //nolint:typecheck
+	listener, err := quic.ListenAddr(address, config.TLSConfig, nil)
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}
