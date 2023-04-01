@@ -31,12 +31,12 @@ type Server struct {
 }
 
 // DefaultAuthenticationFunc is the default authentication function. it accepts all clients.
-func DefaultAuthenticationFunc(token string) bool {
+func DefaultAuthenticationFunc(_ string) bool {
 	return true
 }
 
 // DefaultAuthorizationFunc is the default authorization function. it accepts all clients.
-func DefaultAuthorizationFunc(token, topic string) bool {
+func DefaultAuthorizationFunc(_, _ string) bool {
 	return true
 }
 
