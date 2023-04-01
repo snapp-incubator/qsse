@@ -6,7 +6,7 @@ linters:
   enable-all: true
   disable:
     # it should improve to support more known patterns
-    - varnamelen
+    - varnamelen  
     # deprecated linters
     - maligned
     - scopelint

@@ -54,7 +54,7 @@ type Server interface {
 func NewServer(address string, topics []string, config *ServerConfig) (Server, error) {
 	config = processServerConfig(config)
 
-	listener, err := quic.ListenAddr(address, config.TLSConfig, nil)
+	listener, err := quic.ListenAddr(address, config.TLSConfig, nil) //nolint:typecheck
 	if err != nil {
 		return nil, errors.Errorf("failed to listen at address %s: %s", address, err.Error())
 	}

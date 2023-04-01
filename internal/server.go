@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lucas-clemente/quic-go"
+	quic "github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/snapp-incubator/qsse/auth"
 	"go.uber.org/zap"
