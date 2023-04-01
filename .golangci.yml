@@ -11,7 +11,7 @@ linters:
     - varcheck
     - deadcode
     - nosnakecase
-    - nestif
+    - revive
     - ifshort
     - structcheck
     - maligned
