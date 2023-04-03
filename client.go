@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/lucas-clemente/quic-go"
+	quic "github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 	"go.uber.org/zap"
 )
@@ -56,7 +56,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 			if !res {
 				l.Warn("reconnecting failed")
 
-				return nil, err //nolint:wrapcheck
+				return nil, err
 			}
 
 			connection = c
@@ -171,6 +171,7 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
+//nolint:typecheck
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
 		connection, err := quic.DialAddr(address, tlcCfg, nil)

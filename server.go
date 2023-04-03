@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	"github.com/lucas-clemente/quic-go"
+	quic "github.com/lucas-clemente/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 	"github.com/snapp-incubator/qsse/internal"
 )
