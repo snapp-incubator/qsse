@@ -6,7 +6,7 @@ require (
 	github.com/go-errors/errors v1.4.2
 	github.com/lucas-clemente/quic-go v0.31.1
 	github.com/mehditeymorian/koi v1.0.1
-	github.com/prometheus/client_golang v1.15.0
+	github.com/prometheus/client_golang v1.15.1
 	github.com/stretchr/testify v1.8.2
 	github.com/tchap/zapext/v2 v2.1.1
 	go.uber.org/atomic v1.10.0
