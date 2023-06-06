@@ -5,6 +5,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - depguard
     # it should improve to support more known patterns
     - varnamelen
     # deprecated linters
