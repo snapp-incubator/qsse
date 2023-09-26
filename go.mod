@@ -3,7 +3,7 @@ module github.com/snapp-incubator/qsse
 go 1.19
 
 require (
-	github.com/go-errors/errors v1.5.0
+	github.com/go-errors/errors v1.5.1
 	github.com/lucas-clemente/quic-go v0.31.1
 	github.com/mehditeymorian/koi v1.0.1
 	github.com/prometheus/client_golang v1.16.0
