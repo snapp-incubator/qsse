@@ -178,7 +178,7 @@ func SendError(sendStream quic.SendStream, e *Error) error {
 	return WriteData(errEvent, sendStream)
 }
 
-func CloseClientConnection(connection quic.Connection, code int, err error) error {
+func CloseClientConnection(connection quic.Connection, code uint64, err error) error {
 	appCode := quic.ApplicationErrorCode(code)
 
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {

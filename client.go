@@ -90,6 +90,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	stream, err := connection.OpenUniStream()
 	if err != nil {
 		l.Error("failed to open send stream", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToCreateStream,
@@ -105,6 +106,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	err = internal.WriteData(bytes, stream)
 	if err != nil {
 		l.Error("failed to send offer to server", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToSendOffer,
@@ -122,6 +124,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
 		l.Error("failed to open receive stream", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToCreateStream,
@@ -170,7 +173,7 @@ func processConfig(config *ClientConfig) ClientConfig {
 
 //nolint:typecheck
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
-	for i := 0; i < policy.RetryTimes; i++ {
+	for range policy.RetryTimes {
 		connection, err := quic.DialAddr(context.Background(), address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
