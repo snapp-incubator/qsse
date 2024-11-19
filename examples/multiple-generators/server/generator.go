@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/snapp-incubator/qsse"
 	"math/rand"
 	"time"
+
+	"github.com/snapp-incubator/qsse"
 )
 
 func RandomText(length int) []byte {

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	quic "github.com/lucas-clemente/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 	"go.uber.org/zap"
 )
@@ -95,7 +95,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 			internal.CodeFailedToCreateStream,
 			internal.ErrFailedToCreateStream,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
@@ -111,7 +110,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 			internal.CodeFailedToSendOffer,
 			internal.ErrFailedToSendOffer,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
@@ -129,7 +127,6 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 			internal.CodeFailedToCreateStream,
 			internal.ErrFailedToCreateStream,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
