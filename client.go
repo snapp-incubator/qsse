@@ -42,7 +42,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	processedConfig := processConfig(config)
 	l := internal.NewLogger().Named("client")
 
-	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
+	connection, err := quic.DialAddr(context.Background(), address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if processedConfig.ReconnectPolicy.Retry {
 			l.Warn("Failed to connect to server, retrying...")
@@ -171,7 +171,7 @@ func processConfig(config *ClientConfig) ClientConfig {
 //nolint:typecheck
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
 	for i := 0; i < policy.RetryTimes; i++ {
-		connection, err := quic.DialAddr(address, tlcCfg, nil)
+		connection, err := quic.DialAddr(context.Background(), address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
 		}

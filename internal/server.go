@@ -17,7 +17,7 @@ const DELIMITER = '\n'
 // Server is the main struct for the server.
 type Server struct {
 	Worker       Worker
-	Listener     quic.Listener
+	Listener     *quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
 	Logger       *zap.Logger
