@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	quic "github.com/lucas-clemente/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 	"github.com/snapp-incubator/qsse/internal"
 )
@@ -41,11 +41,11 @@ type MetricConfig struct {
 type Server interface {
 	Publish(topic string, event []byte)
 
-	SetAuthenticator(auth.Authenticator)
-	SetAuthenticatorFunc(auth.AuthenticatorFunc)
+	SetAuthenticator(authenticator auth.Authenticator)
+	SetAuthenticatorFunc(authenticatorFunc auth.AuthenticatorFunc)
 
-	SetAuthorizer(auth.Authorizer)
-	SetAuthorizerFunc(auth.AuthorizerFunc)
+	SetAuthorizer(authorizer auth.Authorizer)
+	SetAuthorizerFunc(authorizer auth.AuthorizerFunc)
 
 	MetricHandler() http.Handler
 }

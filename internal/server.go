@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	quic "github.com/lucas-clemente/quic-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	quic "github.com/quic-go/quic-go"
 	"github.com/snapp-incubator/qsse/auth"
 	"go.uber.org/zap"
 )
@@ -17,7 +17,7 @@ const DELIMITER = '\n'
 // Server is the main struct for the server.
 type Server struct {
 	Worker       Worker
-	Listener     quic.Listener
+	Listener     *quic.Listener
 	EventSources map[string]*EventSource
 	Topics       []string
 	Logger       *zap.Logger
@@ -178,7 +178,7 @@ func SendError(sendStream quic.SendStream, e *Error) error {
 	return WriteData(errEvent, sendStream)
 }
 
-func CloseClientConnection(connection quic.Connection, code int, err error) error {
+func CloseClientConnection(connection quic.Connection, code uint64, err error) error {
 	appCode := quic.ApplicationErrorCode(code)
 
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {

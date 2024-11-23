@@ -1,7 +1,7 @@
 package internal
 
 import (
-	quic "github.com/lucas-clemente/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"go.uber.org/atomic"
 )
 

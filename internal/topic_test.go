@@ -126,5 +126,4 @@ func TestFindRelatedWildcardTopics(t *testing.T) {
 			assert.Equal(t, len(testCase.matchedTopics), len(result))
 		})
 	}
-
 }

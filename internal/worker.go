@@ -134,7 +134,7 @@ func (w *Worker) acceptClientWork(work any) any {
 }
 
 func (w *Worker) AddAcceptClientWork(server *Server, count int) {
-	for i := 0; i < count; i++ {
+	for range count {
 		_, err := w.Pond.AddWork(AcceptClient, server)
 		if err != nil {
 			w.Logger.Error("failed to add accept client work", zap.Error(err))

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	quic "github.com/lucas-clemente/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"github.com/snapp-incubator/qsse/internal"
 	"go.uber.org/zap"
 )
@@ -42,7 +42,7 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	processedConfig := processConfig(config)
 	l := internal.NewLogger().Named("client")
 
-	connection, err := quic.DialAddr(address, processedConfig.TLSConfig, nil)
+	connection, err := quic.DialAddr(context.Background(), address, processedConfig.TLSConfig, nil)
 	if err != nil {
 		if processedConfig.ReconnectPolicy.Retry {
 			l.Warn("Failed to connect to server, retrying...")
@@ -90,12 +90,12 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	stream, err := connection.OpenUniStream()
 	if err != nil {
 		l.Error("failed to open send stream", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToCreateStream,
 			internal.ErrFailedToCreateStream,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
@@ -106,12 +106,12 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	err = internal.WriteData(bytes, stream)
 	if err != nil {
 		l.Error("failed to send offer to server", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToSendOffer,
 			internal.ErrFailedToSendOffer,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
@@ -124,12 +124,12 @@ func NewClient(address string, topics []string, config *ClientConfig) (Client, e
 	receiveStream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
 		l.Error("failed to open receive stream", zap.Error(err))
+
 		err = internal.CloseClientConnection(
 			connection,
 			internal.CodeFailedToCreateStream,
 			internal.ErrFailedToCreateStream,
 		)
-
 		if err != nil {
 			l.Error("failed to close client connection", zap.Error(err))
 		}
@@ -173,8 +173,8 @@ func processConfig(config *ClientConfig) ClientConfig {
 
 //nolint:typecheck
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
-	for i := 0; i < policy.RetryTimes; i++ {
-		connection, err := quic.DialAddr(address, tlcCfg, nil)
+	for range policy.RetryTimes {
+		connection, err := quic.DialAddr(context.Background(), address, tlcCfg, nil)
 		if err == nil {
 			return connection, true
 		}

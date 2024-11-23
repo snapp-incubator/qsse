@@ -1,6 +1,6 @@
 ---
-run:
-  skip-files:
+issues:
+  exclude-files:
     - ".*_test.go"
 linters:
   enable-all: true
@@ -9,18 +9,9 @@ linters:
     # it should improve to support more known patterns
     - varnamelen
     # deprecated linters
-    - varcheck
-    - deadcode
-    - nosnakecase
     - revive
-    - ifshort
-    - structcheck
-    - maligned
-    - scopelint
-    - golint
-    - interfacer
-    - exhaustivestruct
     - ireturn
     - cyclop
     - wrapcheck
     - nolintlint
+    - exportloopref
