@@ -51,8 +51,8 @@ func (c *Client) AcceptEvents(reader *bufio.Reader) {
 			continue
 		}
 
-		switch {
-		case event.Topic == ErrorTopic:
+		switch event.Topic {
+		case ErrorTopic:
 			err, e := UnmarshalError(event.Data)
 			if e != nil {
 				c.Logger.Error("error in unmarshalling", zap.Error(e))

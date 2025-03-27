@@ -9,10 +9,5 @@ linters:
     - depguard
     # it should improve to support more known patterns
     - varnamelen
-    # deprecated linters
     - revive
     - ireturn
-    - cyclop
-    - wrapcheck
-    - nolintlint
-    - exportloopref
