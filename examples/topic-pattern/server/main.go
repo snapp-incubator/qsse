@@ -22,6 +22,7 @@ var lastNames = []string{"Ruth", "Jackson", "Debra", "Allen", "Gerald", "Harris"
 func main() {
 	authenticateFunc := func(token string) bool {
 		log.Printf("Authenticating token: %s", token)
+
 		return token == "secret"
 	}
 
@@ -31,6 +32,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	server.SetAuthenticatorFunc(authenticateFunc)
 
 	go func() {
@@ -41,6 +43,7 @@ func main() {
 			} else {
 				server.Publish(fmt.Sprintf("people.%d.lastname", personID), RandomItem(lastNames))
 			}
+
 			<-time.After(2 * time.Second)
 		}
 	}()

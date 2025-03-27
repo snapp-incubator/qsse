@@ -10,6 +10,7 @@ import (
 func RandomText(length int) []byte {
 	characters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	bytes := make([]byte, length)
+
 	for i := range bytes {
 		bytes[i] = characters[rand.Intn(len(characters))]
 	}

@@ -1,13 +1,16 @@
 ---
-version: 2
-issues:
-  exclude-files:
-    - ".*_test.go"
+version: "2"
 linters:
-  enable-all: true
+  default: all
+  exclusions:
+    paths:
+      - ".*_test.go"
+      - "examples/"
   disable:
     - depguard
     # it should improve to support more known patterns
     - varnamelen
     - revive
     - ireturn
+    - wrapcheck
+    - cyclop

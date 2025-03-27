@@ -15,7 +15,7 @@ const (
 	enabled = false
 )
 
-// nolint:nosnakecase
+//nolint:nosnakecase
 func NewLogger() *zap.Logger {
 	var lvl zapcore.Level
 	if err := lvl.Set(level); err != nil {
@@ -49,7 +49,7 @@ func NewLogger() *zap.Logger {
 	return logger
 }
 
-// nolint:nosnakecase
+//nolint:nosnakecase
 func getPriorityFromLevel(level string) syslog.Priority {
 	switch level {
 	case "debug":

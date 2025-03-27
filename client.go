@@ -171,7 +171,6 @@ func processConfig(config *ClientConfig) ClientConfig {
 	return *config
 }
 
-//nolint:typecheck
 func reconnect(policy ReconnectPolicy, address string, tlcCfg *tls.Config, l *zap.Logger) (quic.Connection, bool) {
 	for range policy.RetryTimes {
 		connection, err := quic.DialAddr(context.Background(), address, tlcCfg, nil)

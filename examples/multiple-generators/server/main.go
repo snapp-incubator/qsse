@@ -25,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	for i := 0; i < generatorsCount; i++ {
+	for range generatorsCount {
 		go generate(topics[rand.Intn(len(topics))], server, rate)
 	}
 

@@ -14,7 +14,7 @@ func main() {
 
 	topics := []string{"topic1", "topic2", "topic3"}
 
-	for i := 0; i < client; i++ {
+	for i := range client {
 		go subscribe(i, topics)
 	}
 
