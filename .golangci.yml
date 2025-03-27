@@ -1,4 +1,5 @@
 ---
+version: 2
 issues:
   exclude-files:
     - ".*_test.go"
