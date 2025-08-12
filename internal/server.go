@@ -46,6 +46,7 @@ func (s *Server) Publish(topic string, event []byte) {
 	for _, matchedTopic := range matchedTopics {
 		if source, ok := s.EventSources[matchedTopic]; ok && len(source.Subscribers) > 0 {
 			s.Metrics.IncEvent(matchedTopic)
+
 			source.DataChannel <- event
 		}
 	}
@@ -124,6 +125,7 @@ func (s *Server) addClientTopicsToEventSources(offer *Offer, subscriber Subscrib
 
 		if valid {
 			s.EventSources[topic].IncomingSubscribers <- subscriber
+
 			s.Metrics.IncSubscriber(topic)
 		}
 	}
