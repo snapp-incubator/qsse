@@ -17,7 +17,7 @@ func NewOffer(token string, topics []string) Offer {
 	return Offer{Token: token, Topics: topics}
 }
 
-func AcceptOffer(connection quic.Connection) (*Offer, error) {
+func AcceptOffer(connection *quic.Conn) (*Offer, error) {
 	stream, err := connection.AcceptUniStream(context.Background())
 	if err != nil {
 		return nil, ErrFailedToCreateStream

@@ -96,7 +96,7 @@ func (e *EventSource) HandleNewSubscriber() {
 }
 
 // WriteData writes data to stream.
-func WriteData(data any, sendStream quic.SendStream) error {
+func WriteData(data any, sendStream *quic.SendStream) error {
 	switch data := data.(type) {
 	case []byte:
 		if _, err := sendStream.Write(data); err != nil {

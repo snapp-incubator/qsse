@@ -73,7 +73,7 @@ func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
-func (s *Server) handleClient(connection quic.Connection) {
+func (s *Server) handleClient(connection *quic.Conn) {
 	offer, err := AcceptOffer(connection)
 	if err != nil {
 		s.Logger.Error("failed to handle new subscriber", zap.Error(err))
@@ -130,7 +130,7 @@ func (s *Server) addClientTopicsToEventSources(offer *Offer, subscriber Subscrib
 }
 
 // isTopicValid check whether topic exists and client is authorized on it or not.
-func (s *Server) isTopicValid(offer *Offer, sendStream quic.SendStream, topic string) (bool, error) {
+func (s *Server) isTopicValid(offer *Offer, sendStream *quic.SendStream, topic string) (bool, error) {
 	if _, ok := s.EventSources[topic]; !ok {
 		s.Logger.Warn("topic doesn't exists", zap.String("topic", topic))
 
@@ -171,14 +171,14 @@ func (s *Server) GenerateEventSources(topics []string) {
 }
 
 // SendError send input error to client.
-func SendError(sendStream quic.SendStream, e *Error) error {
+func SendError(sendStream *quic.SendStream, e *Error) error {
 	errBytes, _ := json.Marshal(e) //nolint:errchkjson
 	errEvent := NewEvent(ErrorTopic, errBytes)
 
 	return WriteData(errEvent, sendStream)
 }
 
-func CloseClientConnection(connection quic.Connection, code uint64, err error) error {
+func CloseClientConnection(connection *quic.Conn, code uint64, err error) error {
 	appCode := quic.ApplicationErrorCode(code)
 
 	if err = connection.CloseWithError(appCode, err.Error()); err != nil {

@@ -10,7 +10,7 @@ import (
 )
 
 type Client struct {
-	Connection quic.Connection
+	Connection *quic.Conn
 	Token      string
 	Topics     []string
 	Logger     *zap.Logger
