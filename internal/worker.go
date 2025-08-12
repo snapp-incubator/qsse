@@ -38,24 +38,6 @@ func NewWorker(cfg WorkerConfig, l *zap.Logger) Worker {
 	return worker
 }
 
-func (w *Worker) registerWorkers(cfg WorkerConfig) {
-	distributeWorker := koi.Worker{
-		QueueSize:       cfg.EventDistributorQueueSize,
-		ConcurrentCount: cfg.EventDistributorCount,
-		Work:            w.distributeWork,
-	}
-	_ = w.Pond.RegisterWorker(DistributeEvent, distributeWorker)
-
-	acceptClientWorker := koi.Worker{
-		QueueSize:       cfg.ClientAcceptorQueueSize,
-		ConcurrentCount: cfg.ClientAcceptorCount,
-		Work:            w.acceptClientWork,
-	}
-	_ = w.Pond.RegisterWorker(AcceptClient, acceptClientWorker)
-}
-
-// ---------------------------------------------------------------
-
 type DistributeWork struct {
 	Event       []byte
 	EventSource *EventSource
@@ -65,35 +47,6 @@ func NewDistributeWork(event []byte, eventSource *EventSource) *DistributeWork {
 	return &DistributeWork{Event: event, EventSource: eventSource}
 }
 
-func (w *Worker) distributeWork(work any) any {
-	data, ok := work.(*DistributeWork)
-	if !ok {
-		w.Logger.Warn("Worker: invalid work input")
-
-		return nil
-	}
-
-	topic := data.EventSource.Topic
-	eventData := data.Event
-	eventSource := data.EventSource
-	event := NewEvent(topic, eventData)
-
-	eventSource.Metrics.DecEvent(topic)
-
-	for _, subscriber := range eventSource.Subscribers {
-		if subscriber.Corrupt.Load() {
-			continue
-		}
-
-		if err := WriteData(event, subscriber.Stream); err != nil {
-			w.Logger.Warn("err while sending event to client", zap.Error(err))
-			subscriber.Corrupt.Store(true)
-		}
-	}
-
-	return nil
-}
-
 func (w *Worker) AddDistributeWork(work *DistributeWork) {
 	_, err := w.Pond.AddWork(DistributeEvent, work)
 	if err != nil {
@@ -101,7 +54,14 @@ func (w *Worker) AddDistributeWork(work *DistributeWork) {
 	}
 }
 
-// ---------------------------------------------------------------
+func (w *Worker) AddAcceptClientWork(server *Server, count int) {
+	for range count {
+		_, err := w.Pond.AddWork(AcceptClient, server)
+		if err != nil {
+			w.Logger.Error("failed to add accept client work", zap.Error(err))
+		}
+	}
+}
 
 // acceptClientWork accepts clients and do the following steps.
 // 1. Accept a receivedStream.
@@ -133,11 +93,47 @@ func (w *Worker) acceptClientWork(work any) any {
 	}
 }
 
-func (w *Worker) AddAcceptClientWork(server *Server, count int) {
-	for range count {
-		_, err := w.Pond.AddWork(AcceptClient, server)
-		if err != nil {
-			w.Logger.Error("failed to add accept client work", zap.Error(err))
+func (w *Worker) registerWorkers(cfg WorkerConfig) {
+	distributeWorker := koi.Worker{
+		QueueSize:       cfg.EventDistributorQueueSize,
+		ConcurrentCount: cfg.EventDistributorCount,
+		Work:            w.distributeWork,
+	}
+	_ = w.Pond.RegisterWorker(DistributeEvent, distributeWorker)
+
+	acceptClientWorker := koi.Worker{
+		QueueSize:       cfg.ClientAcceptorQueueSize,
+		ConcurrentCount: cfg.ClientAcceptorCount,
+		Work:            w.acceptClientWork,
+	}
+	_ = w.Pond.RegisterWorker(AcceptClient, acceptClientWorker)
+}
+
+func (w *Worker) distributeWork(work any) any {
+	data, ok := work.(*DistributeWork)
+	if !ok {
+		w.Logger.Warn("Worker: invalid work input")
+
+		return nil
+	}
+
+	topic := data.EventSource.Topic
+	eventData := data.Event
+	eventSource := data.EventSource
+	event := NewEvent(topic, eventData)
+
+	eventSource.Metrics.DecEvent(topic)
+
+	for _, subscriber := range eventSource.Subscribers {
+		if subscriber.Corrupt.Load() {
+			continue
+		}
+
+		if err := WriteData(event, subscriber.Stream); err != nil {
+			w.Logger.Warn("err while sending event to client", zap.Error(err))
+			subscriber.Corrupt.Store(true)
 		}
 	}
+
+	return nil
 }

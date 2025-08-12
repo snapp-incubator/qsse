@@ -40,6 +40,7 @@ func UnmarshalError(bytes []byte) (Error, error) {
 		e   Error
 		err error
 	)
+
 	if err = json.Unmarshal(bytes, &e); err != nil {
 		e.Code = CodeUnknown
 		e.Data = make(map[string]any)

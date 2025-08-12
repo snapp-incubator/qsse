@@ -72,6 +72,48 @@ func (s *Server) SetAuthorizerFunc(authorizer auth.AuthorizerFunc) {
 	s.Authorizer = authorizer
 }
 
+// GenerateEventSources generates eventSources for each topic.
+func (s *Server) GenerateEventSources(topics []string) {
+	for _, topic := range topics {
+		if _, ok := s.EventSources[topic]; !ok {
+			s.Logger.Info("creating new event source for topic", zap.String("topic", topic))
+			s.EventSources[topic] = NewEventSource(
+				topic,
+				make(chan []byte),
+				make([]Subscriber, 0),
+				s.Metrics,
+				s.CleaningInterval,
+			)
+
+			go s.EventSources[topic].DistributeEvents(s.Worker)
+			go s.EventSources[topic].CleanCorruptSubscribers()
+			go s.EventSources[topic].HandleNewSubscriber()
+		}
+	}
+}
+
+// SendError send input error to client.
+func SendError(sendStream *quic.SendStream, e *Error) error {
+	errBytes, _ := json.Marshal(e) //nolint:errchkjson
+	errEvent := NewEvent(ErrorTopic, errBytes)
+
+	return WriteData(errEvent, sendStream)
+}
+
+func CloseClientConnection(connection *quic.Conn, code uint64, err error) error {
+	appCode := quic.ApplicationErrorCode(code)
+
+	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) MetricHandler() http.Handler {
+	return promhttp.Handler()
+}
+
 // handleClient authenticate client and If the authentication is successful,
 // opens sendStream for each topic and add them to eventSources.
 func (s *Server) handleClient(connection *quic.Conn) {
@@ -150,46 +192,4 @@ func (s *Server) isTopicValid(offer *Offer, sendStream *quic.SendStream, topic s
 	}
 
 	return true, nil
-}
-
-// GenerateEventSources generates eventSources for each topic.
-func (s *Server) GenerateEventSources(topics []string) {
-	for _, topic := range topics {
-		if _, ok := s.EventSources[topic]; !ok {
-			s.Logger.Info("creating new event source for topic", zap.String("topic", topic))
-			s.EventSources[topic] = NewEventSource(
-				topic,
-				make(chan []byte),
-				make([]Subscriber, 0),
-				s.Metrics,
-				s.CleaningInterval,
-			)
-
-			go s.EventSources[topic].DistributeEvents(s.Worker)
-			go s.EventSources[topic].CleanCorruptSubscribers()
-			go s.EventSources[topic].HandleNewSubscriber()
-		}
-	}
-}
-
-// SendError send input error to client.
-func SendError(sendStream *quic.SendStream, e *Error) error {
-	errBytes, _ := json.Marshal(e) //nolint:errchkjson
-	errEvent := NewEvent(ErrorTopic, errBytes)
-
-	return WriteData(errEvent, sendStream)
-}
-
-func CloseClientConnection(connection *quic.Conn, code uint64, err error) error {
-	appCode := quic.ApplicationErrorCode(code)
-
-	if err = connection.CloseWithError(appCode, err.Error()); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Server) MetricHandler() http.Handler {
-	return promhttp.Handler()
 }
